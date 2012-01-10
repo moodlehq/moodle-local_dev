@@ -16,16 +16,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The plugin version information
+ * Capability definitions for the Developers local plugin
  *
  * @package     local_dev
+ * @category    access
  * @copyright   2012 David Mudrak <david@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_dev';
-$plugin->version   = 2012011001;
-$plugin->requires  = 2011120500;
-$plugin->maturity  = MATURITY_ALPHA;
+$capabilities = array(
+
+    // Ability to set-up and configure the Developers plugin
+    'local/dev:manage' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'legacy' => array()
+    ),
+
+);

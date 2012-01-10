@@ -23,4 +23,5 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['dev:manage'] = 'Manage the Developers plugin';
 $string['pluginname'] = 'Developers';
