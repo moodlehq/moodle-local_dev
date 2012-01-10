@@ -33,4 +33,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 function dev_extends_navigation(global_navigation $navigation) {
     $devnode = $navigation->add(get_string('pluginname', 'local_dev'), new moodle_url('/local/dev/'));
+    if (has_capability('local/dev:manage', context_system::instance())) {
+        $admin = $devnode->add(get_string('administration'));
+        $admin->add(get_string('aliases', 'local_dev'), new moodle_url('/local/dev/admin/aliases.php'));
+    }
 }

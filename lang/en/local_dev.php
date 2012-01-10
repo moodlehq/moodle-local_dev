@@ -23,5 +23,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['aliases'] = 'Aliases';
+$string['aliasescreate'] = 'Create new person';
+$string['aliasesemail'] = 'Email';
+$string['aliasesfullname'] = 'Name';
+$string['aliasesinfo'] = 'Info';
+$string['aliasesmap'] = 'Map to the current person';
 $string['dev:manage'] = 'Manage the Developers plugin';
+$string['personmap'] = 'Map';
+$string['personnew'] = 'New';
 $string['pluginname'] = 'Developers';
