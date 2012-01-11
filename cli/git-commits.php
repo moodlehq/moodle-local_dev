@@ -148,7 +148,7 @@ function dev_git_record_commits(PHPGit_Repository $repo, $gitbranch, $branch, $m
         }
 
         // register the branch containing the current commit
-        if (! $DB->record_exists('dev_git_commit_branches', array('commitid' => $commitid))) {
+        if (! $DB->record_exists('dev_git_commit_branches', array('branch' => $branch, 'commitid' => $commitid))) {
             $branchinfo = new stdClass();
             $branchinfo->commitid = $commitid;
             $branchinfo->branch = $branch;
