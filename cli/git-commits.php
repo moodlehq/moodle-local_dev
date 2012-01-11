@@ -54,8 +54,8 @@ $repo = new PHPGit_Repository($CFG->dataroot.'/local_dev/repos/moodle.git');
 
 $config = get_config('local_dev');
 
-if ($options['reset-startpoints'] or empty($config->startpoints)) {
-    set_config('startpoints', json_encode(array()), 'local_dev');
+if ($options['reset-startpoints'] or empty($config->gitstartpoints)) {
+    set_config('gitstartpoints', json_encode(array()), 'local_dev');
     $config = get_config('local_dev');
 }
 
@@ -92,10 +92,10 @@ exit(0);
 function dev_git_record_commits(PHPGit_Repository $repo, $gitbranch, $branch, $mergemode, $showprogress=false) {
     global $DB;
 
-    $startpoints = get_config('local_dev', 'startpoints');
+    $startpoints = get_config('local_dev', 'gitstartpoints');
     if ($startpoints === false) {
-        set_config('startpoints', json_encode(array()), 'local_dev');
-        $startpoints = get_config('local_dev', 'startpoints');
+        set_config('gitstartpoints', json_encode(array()), 'local_dev');
+        $startpoints = get_config('local_dev', 'gitstartpoints');
     }
     $startpoints = json_decode($startpoints, true);
 
@@ -162,11 +162,11 @@ function dev_git_record_commits(PHPGit_Repository $repo, $gitbranch, $branch, $m
         $startpoints[$branch][$mergemode] = $record->commithash;
 
         if ($counter % 1000 == 0) {
-            set_config('startpoints', json_encode($startpoints), 'local_dev');
+            set_config('gitstartpoints', json_encode($startpoints), 'local_dev');
         }
     }
 
-    set_config('startpoints', json_encode($startpoints), 'local_dev');
+    set_config('gitstartpoints', json_encode($startpoints), 'local_dev');
 
     if ($showprogress) {
         fputs(STDOUT, PHP_EOL);
