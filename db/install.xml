@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/dev/db" VERSION="20120110" COMMENT="XMLDB file for the Moodle Developers plugin"
+<XMLDB PATH="local/dev/db" VERSION="20120111" COMMENT="XMLDB file for the Moodle Developers plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="dev" COMMENT="Default comment for dev, please edit me" NEXT="dev_git_commits">
+    <TABLE NAME="dev" COMMENT="Default comment for dev, please edit me" NEXT="dev_persons">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
       </FIELDS>
@@ -12,7 +12,33 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="dev_git_commits" COMMENT="Stores the Git commit records" PREVIOUS="dev" NEXT="dev_git_commit_branches">
+    <TABLE NAME="dev_persons" COMMENT="List of all known persons" PREVIOUS="dev" NEXT="dev_person_aliases">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="firstname"/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The firstname" PREVIOUS="id" NEXT="lastname"/>
+        <FIELD NAME="lastname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" PREVIOUS="firstname" NEXT="email"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The primary email, used form gravatar integration" PREVIOUS="lastname" NEXT="moodleorgid"/>
+        <FIELD NAME="moodleorgid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The user's ID at moodle.org, if known" PREVIOUS="email" NEXT="trackerid"/>
+        <FIELD NAME="trackerid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="The username of the person in the JIRA tracker" PREVIOUS="moodleorgid"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="dev_person_aliases" COMMENT="Lists all aliases the given person uses" PREVIOUS="dev_persons" NEXT="dev_git_commits">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="fullname"/>
+        <FIELD NAME="fullname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The name used by the given developer" PREVIOUS="id" NEXT="email"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The email used by the given developer" PREVIOUS="fullname" NEXT="personid"/>
+        <FIELD NAME="personid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the user from the persons table" PREVIOUS="email"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="uq_nameemail"/>
+        <KEY NAME="uq_nameemail" TYPE="unique" FIELDS="fullname, email" PREVIOUS="primary" NEXT="fk_person"/>
+        <KEY NAME="fk_person" TYPE="foreign" FIELDS="personid" REFTABLE="dev_persons" REFFIELDS="id" PREVIOUS="uq_nameemail"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="dev_git_commits" COMMENT="Stores the Git commit records" PREVIOUS="dev_person_aliases" NEXT="dev_git_commit_branches">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="repository"/>
         <FIELD NAME="repository" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The name of the repository this commit comes from" PREVIOUS="id" NEXT="commithash"/>
@@ -36,7 +62,7 @@
         <INDEX NAME="ix_tag" UNIQUE="false" FIELDS="tag" PREVIOUS="uq_repocommit"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="dev_git_commit_branches" COMMENT="Stores the information about branches that contain a given commit" PREVIOUS="dev_git_commits" NEXT="dev_persons">
+    <TABLE NAME="dev_git_commit_branches" COMMENT="Stores the information about branches that contain a given commit" PREVIOUS="dev_git_commits" NEXT="dev_tracker_activities">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="commitid"/>
         <FIELD NAME="commitid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="ID of the commit record" PREVIOUS="id" NEXT="branch"/>
@@ -49,30 +75,26 @@
         <INDEX NAME="uq_commit_branch" UNIQUE="true" FIELDS="commitid, branch"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="dev_persons" COMMENT="List of all known persons" PREVIOUS="dev_git_commit_branches" NEXT="dev_person_aliases">
+    <TABLE NAME="dev_tracker_activities" COMMENT="The activity stream items from the Moodle tracker" PREVIOUS="dev_git_commit_branches">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="firstname"/>
-        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The firstname" PREVIOUS="id" NEXT="lastname"/>
-        <FIELD NAME="lastname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" PREVIOUS="firstname" NEXT="email"/>
-        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The primary email, used form gravatar integration" PREVIOUS="lastname" NEXT="moodleorgid"/>
-        <FIELD NAME="moodleorgid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The user's ID at moodle.org, if known" PREVIOUS="email"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="uuid"/>
+        <FIELD NAME="uuid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The universally unique identifier as provided by the activity stream" PREVIOUS="id" NEXT="title"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="1333" NOTNULL="true" SEQUENCE="false" COMMENT="The activity title" PREVIOUS="uuid" NEXT="personid"/>
+        <FIELD NAME="personid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the activity author from the persons table, if known" PREVIOUS="title" NEXT="personfullname"/>
+        <FIELD NAME="personfullname" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="Full name" PREVIOUS="personid" NEXT="personlink"/>
+        <FIELD NAME="personlink" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="The URL to see the user's profile" PREVIOUS="personfullname" NEXT="personemail"/>
+        <FIELD NAME="personemail" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="The email of the user as reported by the stream" PREVIOUS="personlink" NEXT="category"/>
+        <FIELD NAME="category" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="The category of the activity, if reported by the stream" PREVIOUS="personemail" NEXT="link"/>
+        <FIELD NAME="link" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="The URL to the activity" PREVIOUS="category" NEXT="timecreated"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="When did the activity happened" PREVIOUS="link"/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="fk_person"/>
+        <KEY NAME="fk_person" TYPE="foreign" FIELDS="personid" REFTABLE="dev_persons" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
-    </TABLE>
-    <TABLE NAME="dev_person_aliases" COMMENT="Lists all aliases the given person uses" PREVIOUS="dev_persons">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="fullname"/>
-        <FIELD NAME="fullname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The name used by the given developer" PREVIOUS="id" NEXT="email"/>
-        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The email used by the given developer" PREVIOUS="fullname" NEXT="personid"/>
-        <FIELD NAME="personid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the user from the persons table" PREVIOUS="email"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="uq_nameemail"/>
-        <KEY NAME="uq_nameemail" TYPE="unique" FIELDS="fullname, email" PREVIOUS="primary" NEXT="fk_person"/>
-        <KEY NAME="fk_person" TYPE="foreign" FIELDS="personid" REFTABLE="dev_persons" REFFIELDS="id" PREVIOUS="uq_nameemail"/>
-      </KEYS>
+      <INDEXES>
+        <INDEX NAME="uq_uuid" UNIQUE="true" FIELDS="uuid"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>
