@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/dev/db" VERSION="20120111" COMMENT="XMLDB file for the Moodle Developers plugin"
+<XMLDB PATH="local/dev/db" VERSION="20120131" COMMENT="XMLDB file for the Moodle Developers plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="dev" COMMENT="Default comment for dev, please edit me" NEXT="dev_persons">
+    <TABLE NAME="dev" COMMENT="Default comment for dev, please edit me" NEXT="dev_git_user_aliases">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true"/>
       </FIELDS>
@@ -12,49 +12,36 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="dev_persons" COMMENT="List of all known persons" PREVIOUS="dev" NEXT="dev_person_aliases">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="firstname"/>
-        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The firstname" PREVIOUS="id" NEXT="lastname"/>
-        <FIELD NAME="lastname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" PREVIOUS="firstname" NEXT="email"/>
-        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The primary email, used form gravatar integration" PREVIOUS="lastname" NEXT="moodleorgid"/>
-        <FIELD NAME="moodleorgid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The user's ID at moodle.org, if known" PREVIOUS="email" NEXT="trackerid"/>
-        <FIELD NAME="trackerid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="The username of the person in the JIRA tracker" PREVIOUS="moodleorgid"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-      </KEYS>
-    </TABLE>
-    <TABLE NAME="dev_person_aliases" COMMENT="Lists all aliases the given person uses" PREVIOUS="dev_persons" NEXT="dev_git_commits">
+    <TABLE NAME="dev_git_user_aliases" COMMENT="Lists all aliases the given user uses in Git repositories" PREVIOUS="dev" NEXT="dev_git_commits">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="fullname"/>
         <FIELD NAME="fullname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The name used by the given developer" PREVIOUS="id" NEXT="email"/>
-        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The email used by the given developer" PREVIOUS="fullname" NEXT="personid"/>
-        <FIELD NAME="personid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the user from the persons table" PREVIOUS="email"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The email used by the given developer" PREVIOUS="fullname" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the user in the user table" PREVIOUS="email"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="uq_nameemail"/>
-        <KEY NAME="uq_nameemail" TYPE="unique" FIELDS="fullname, email" PREVIOUS="primary" NEXT="fk_person"/>
-        <KEY NAME="fk_person" TYPE="foreign" FIELDS="personid" REFTABLE="dev_persons" REFFIELDS="id" PREVIOUS="uq_nameemail"/>
+        <KEY NAME="uq_nameemail" TYPE="unique" FIELDS="fullname, email" PREVIOUS="primary" NEXT="fk_userid"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" PREVIOUS="uq_nameemail"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="dev_git_commits" COMMENT="Stores the Git commit records" PREVIOUS="dev_person_aliases" NEXT="dev_git_commit_branches">
+    <TABLE NAME="dev_git_commits" COMMENT="Stores the Git commit records" PREVIOUS="dev_git_user_aliases" NEXT="dev_git_commit_branches">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="repository"/>
         <FIELD NAME="repository" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The name of the repository this commit comes from" PREVIOUS="id" NEXT="commithash"/>
         <FIELD NAME="commithash" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="SHA hash of the commit object" PREVIOUS="repository" NEXT="authordate"/>
         <FIELD NAME="authordate" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="The timestamp of the commit authorship" PREVIOUS="commithash" NEXT="authorname"/>
         <FIELD NAME="authorname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The commit's author name as recorded in the commit" PREVIOUS="authordate" NEXT="authoremail"/>
-        <FIELD NAME="authoremail" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The commit author's email as recorded in the commit object" PREVIOUS="authorname" NEXT="personid"/>
-        <FIELD NAME="personid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The id of the author in the dev_persons table, if known" PREVIOUS="authoremail" NEXT="subject"/>
-        <FIELD NAME="subject" TYPE="text" LENGTH="big" NOTNULL="false" SEQUENCE="false" COMMENT="The commit message subject" PREVIOUS="personid" NEXT="merge"/>
+        <FIELD NAME="authoremail" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="The commit author's email as recorded in the commit object" PREVIOUS="authorname" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The id of the author in the user table, if known" PREVIOUS="authoremail" NEXT="subject"/>
+        <FIELD NAME="subject" TYPE="text" LENGTH="big" NOTNULL="false" SEQUENCE="false" COMMENT="The commit message subject" PREVIOUS="userid" NEXT="merge"/>
         <FIELD NAME="merge" TYPE="int" LENGTH="2" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="Is the commit a merge commit or not" PREVIOUS="subject" NEXT="issue"/>
         <FIELD NAME="issue" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="The tracker issue key this commit is associated with" PREVIOUS="merge" NEXT="tag"/>
         <FIELD NAME="tag" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="The most recent git tag containing this commit" PREVIOUS="issue"/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="fk_person"/>
-        <KEY NAME="fk_person" TYPE="foreign" FIELDS="personid" REFTABLE="dev_persons" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="fk_userid"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="ix_issue" UNIQUE="false" FIELDS="issue" NEXT="uq_repocommit"/>
@@ -79,18 +66,18 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="uuid"/>
         <FIELD NAME="uuid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The universally unique identifier as provided by the activity stream" PREVIOUS="id" NEXT="title"/>
-        <FIELD NAME="title" TYPE="char" LENGTH="1333" NOTNULL="true" SEQUENCE="false" COMMENT="The activity title" PREVIOUS="uuid" NEXT="personid"/>
-        <FIELD NAME="personid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the activity author from the persons table, if known" PREVIOUS="title" NEXT="personfullname"/>
-        <FIELD NAME="personfullname" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="Full name" PREVIOUS="personid" NEXT="personlink"/>
-        <FIELD NAME="personlink" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="The URL to see the user's profile" PREVIOUS="personfullname" NEXT="personemail"/>
-        <FIELD NAME="personemail" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="The email of the user as reported by the stream" PREVIOUS="personlink" NEXT="category"/>
-        <FIELD NAME="category" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="The category of the activity, if reported by the stream" PREVIOUS="personemail" NEXT="link"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="1333" NOTNULL="true" SEQUENCE="false" COMMENT="The activity title" PREVIOUS="uuid" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the activity author from the user table, if known" PREVIOUS="title" NEXT="userfullname"/>
+        <FIELD NAME="userfullname" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="Full name as read from the tracker" PREVIOUS="userid" NEXT="userlink"/>
+        <FIELD NAME="userlink" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="The URL to see the user's profile" PREVIOUS="userfullname" NEXT="useremail"/>
+        <FIELD NAME="useremail" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="The email of the user as reported by the stream" PREVIOUS="userlink" NEXT="category"/>
+        <FIELD NAME="category" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="The category of the activity, if reported by the stream" PREVIOUS="useremail" NEXT="link"/>
         <FIELD NAME="link" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="The URL to the activity" PREVIOUS="category" NEXT="timecreated"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="When did the activity happened" PREVIOUS="link"/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="fk_person"/>
-        <KEY NAME="fk_person" TYPE="foreign" FIELDS="personid" REFTABLE="dev_persons" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="fk_userid"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="uq_uuid" UNIQUE="true" FIELDS="uuid"/>
