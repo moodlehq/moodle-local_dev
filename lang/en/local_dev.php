@@ -23,13 +23,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['aliases'] = 'Aliases';
-$string['aliasescreate'] = 'Create new person';
-$string['aliasesemail'] = 'Email';
-$string['aliasesfullname'] = 'Name';
-$string['aliasesinfo'] = 'Info';
-$string['aliasesmap'] = 'Map to the current person';
+$string['adminoverview'] = 'Overview';
 $string['dev:manage'] = 'Manage the Developers plugin';
-$string['personmap'] = 'Map';
-$string['personnew'] = 'New';
+$string['gitaliases'] = 'Git aliases';
+$string['gitaliasesassign'] = 'Assign';
+$string['gitaliasescommits'] = 'Commits';
+$string['gitaliasesconflict'] = 'The alias already exists for another user';
+$string['gitaliasesemail'] = 'Email';
+$string['gitaliasesfullname'] = 'Name';
 $string['pluginname'] = 'Developers';

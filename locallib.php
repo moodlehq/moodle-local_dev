@@ -16,7 +16,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The plugin's internal API
+ * Provides various classes used by the plugin
  *
  * @package     local_dev
  * @copyright   2012 David Mudrak <david@moodle.com>
@@ -26,40 +26,46 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Persons (developers, integrators, reporters etc) management
+ * Manages Git user aliases
  */
-class dev_persons_manager {
+class dev_git_aliases_manager {
 
     /**
-     * Registers new alias for the given person
+     * Registers new alias
      *
-     * @param int $personid
-     * @param string $fullname
-     * @param string $email
+     * @param int $userid the real user ID
+     * @param string $fullname the user's name as displayed in Git
+     * @param string $email the user's email in Git
+     * @return bool|null True for success, false if the alias already exists for another user, null if the alias already exists
      */
-    public static function add_alias($personid, $fullname, $email) {
+    public static function add_alias($userid, $fullname, $email) {
         global $DB;
 
-        if (is_null($personid) or is_null($fullname) or is_null($email)) {
+        if (is_null($userid) or is_null($fullname) or is_null($email)) {
             throw new coding_exception('NULL parameter values not allowed here');
         }
 
-        $existing = $DB->get_record('dev_person_aliases', array('fullname' => $fullname, 'email' => $email), 'personid', IGNORE_MISSING);
+        $existing = $DB->get_record('dev_git_user_aliases', array('fullname' => $fullname, 'email' => $email), 'userid', IGNORE_MISSING);
 
         if ($existing === false) {
             $alias = new stdClass();
-            $alias->personid = $personid;
+            $alias->userid = $userid;
             $alias->fullname = $fullname;
             $alias->email    = $email;
-            $DB->insert_record('dev_person_aliases', $alias);
+            $DB->insert_record('dev_git_user_aliases', $alias);
+            return true;
 
-        } else if ($existing->personid != $personid) {
-            throw new coding_exception('Alias already exists for another person');
+        } else if ($existing->userid != $userid) {
+            return false;
+
+        } else {
+            return null;
         }
+
     }
 
     /**
-     * Links the various activity sources with the known persons, using the aliases
+     * Links the Git commit records with the user table, using the user's email and aliases
      */
     public static function update_aliases() {
         global $DB;
@@ -68,84 +74,45 @@ class dev_persons_manager {
 
         if ($dbfamily == 'postgres' or $dbfamily == 'mssql') {
             $sql = "UPDATE {dev_git_commits}
-                       SET personid = a.personid
-                      FROM {dev_person_aliases} a
-                     WHERE a.fullname = {dev_git_commits}.authorname
-                       AND a.email = {dev_git_commits}.authoremail";
+                       SET userid = u.id
+                      FROM {user} u
+                     WHERE {dev_git_commits}.userid IS NULL
+                           AND u.email = {dev_git_commits}.authoremail";
+            $DB->execute($sql);
+
+            $sql = "UPDATE {dev_git_commits}
+                       SET userid = a.userid
+                      FROM {dev_git_user_aliases} a
+                     WHERE {dev_git_commits}.userid IS NULL
+                           AND a.fullname = {dev_git_commits}.authorname
+                           AND a.email = {dev_git_commits}.authoremail";
+            $DB->execute($sql);
 
         } else if ($dbfamily == 'mysql') {
-            $sql = "UPDATE {dev_git_commits} c, {dev_person_aliases} a
-                       SET c.personid = a.personid
+            $sql = "UPDATE {dev_git_commits} c, {user} u
+                       SET c.userid = u.id
+                     WHERE u.email = c.authoremail";
+            $DB->execute($sql);
+
+            $sql = "UPDATE {dev_git_commits} c, {dev_git_user_aliases} a
+                       SET c.userid = a.userid
                      WHERE a.fullname = c.authorname
                        AND a.email = c.authoremail";
+            $DB->execute($sql);
 
         } else {
             $sql = "UPDATE {dev_git_commits}
-                       SET authorid = (SELECT personid
-                                         FROM {dev_person_aliases}
-                                        WHERE authorname = {dev_git_commits}.authorname
-                                          AND authoremail = {dev_git_commits.authoremail})";
+                       SET userid = (SELECT id
+                                       FROM {user}
+                                      WHERE authoremail = {user}.email})";
+            $DB->execute($sql);
+
+            $sql = "UPDATE {dev_git_commits}
+                       SET userid = (SELECT userid
+                                       FROM {dev_git_user_aliases}
+                                      WHERE authorname = {dev_git_commits}.authorname
+                                        AND authoremail = {dev_git_commits}.authoremail)";
+            $DB->execute($sql);
         }
-
-        $DB->execute($sql);
-    }
-}
-
-
-/**
- * Used to display the list of unknown persons
- */
-class dev_unknown_persons_list implements renderable {
-
-    /** @var array */
-    protected $persons = array();
-
-    /** @var null|array */
-    protected $menu = null;
-
-    /**
-     * Adds the given user data to the list of unknown persons
-     *
-     * @param string $fullname the fullname of the person in the tracked source
-     * @param string $email the email address of the person in the tracked source
-     * @param string $source the tracked source identification, eg 'moodle.git' or 'tracker'
-     * @param string $info additional information to display, eg number of commits
-     */
-    public function add_person($fullname, $email, $source, $info=null) {
-        $person = new stdClass();
-        $person->fullname = $fullname;
-        $person->email = $email;
-        $person->source = $source;
-        $person->info = $info;
-        $this->persons[] = $person;
-    }
-
-    /**
-     * Returns the list of added unknown persons
-     *
-     * @return array
-     */
-    public function get_persons() {
-        return $this->persons;
-    }
-
-    /**
-     * Loads the list of currently known persons from the database
-     *
-     * @return array
-     */
-    public function get_menu() {
-        global $DB;
-
-        if (is_null($this->menu)) {
-            $this->menu = array();
-            $known = $DB->get_records('dev_persons', null, 'lastname,firstname,email,id', 'id,lastname,firstname,email');
-            if (is_array($known)) {
-                foreach ($known as $person) {
-                    $this->menu[$person->id] = s(sprintf('%s <%s>', fullname($person), $person->email));
-                }
-            }
-        }
-        return $this->menu;
     }
 }
