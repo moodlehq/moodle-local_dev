@@ -40,6 +40,7 @@ list($options, $unrecognized) = cli_get_params(array(
     'help' => false,
     'export' => false,
     'import' => '',
+    'update-tags' => true,
 ), array('h' => 'help'));
 
 if ($options['help']) {
@@ -48,6 +49,7 @@ if ($options['help']) {
 --show-progress         Display the progress indicator
 --export                Dump the currently registered data
 --import=file           Load data from a file
+--update-tags           Tries to find the relevant tags for untagged commits
 --help                  Display this help
 
 ");
@@ -75,8 +77,8 @@ if ($filename = $options['import']) {
     $counter = 0;
     foreach ($lines as $line) {
         $commithash = substr($line, 0, 40);
-        $tag = substr($line, 42);
-        $DB->set_field('dev_git_commits', 'tag', $tag, array('commithash' => $commithash));
+        $tag = substr($line, 41);
+        $DB->set_field('dev_git_commits', 'tag', $tag, array('repository' => 'moodle.git', 'commithash' => $commithash));
         if ($options['show-progress']) {
             fputs(STDOUT, ++$counter.'/'.$total."\r");
         }
@@ -84,27 +86,29 @@ if ($filename = $options['import']) {
     exit(0);
 }
 
-$repo = new PHPGit_Repository($CFG->dataroot.'/local_dev/repos/moodle.git');
+if ($options['update-tags']) {
+    $repo = new PHPGit_Repository($CFG->dataroot.'/local_dev/repos/moodle.git');
+    $commits = $DB->get_fieldset_select('dev_git_commits', 'commithash', 'tag IS NULL ORDER BY authordate DESC');
+    $total = count($commits);
+    $counter = 0;
 
-$commits = $DB->get_fieldset_select('dev_git_commits', 'commithash', 'tag IS NULL ORDER BY authordate DESC');
-
-$total = count($commits);
-$counter = 0;
-
-foreach ($commits as $commit) {
-    try {
-        $tag = $repo->git("describe --exact-match --match 'v[0-9]*' --contains {$commit} 2> /dev/null");
-        if (preg_match('/^(v[0-9]+\.[0-9]+.*?)~.*$/', $tag, $matches)) {
-            $tag = $matches[1];
-            $DB->set_field('dev_git_commits', 'tag', $tag, array('commithash' => $commit));
+    foreach ($commits as $commit) {
+        try {
+            $tag = $repo->git("describe --exact-match --match 'v[0-9]*' --contains {$commit} 2> /dev/null");
+            if (preg_match('/^(v[0-9]+\.[0-9]+.*?)~.*$/', $tag, $matches)) {
+                $tag = $matches[1];
+                $DB->set_field('dev_git_commits', 'tag', $tag, array('commithash' => $commit));
+            }
+        }
+        catch (GitRuntimeException $e) {
+            // most probably the "fatal - cannot describe" error meaning there is no tag yet
+            // describing this commit
+        }
+        if ($options['show-progress']) {
+            fputs(STDOUT, ++$counter.'/'.$total."\r");
         }
     }
-    catch (GitRuntimeException $e) {
-        // most probably the "fatal - cannot describe" error meaning there is no tag yet
-        // describing this commit
+    if ($options['show-progress']) {
+        fputs(STDOUT, "\n");
     }
-
-    fputs(STDOUT, ++$counter.'/'.$total."\r");
 }
-
-fputs(STDOUT, "\n");
