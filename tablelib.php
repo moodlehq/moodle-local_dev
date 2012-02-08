@@ -85,4 +85,62 @@ class dev_activity_table_sql extends table_sql {
             return get_string($data->realusercountry, 'core_countries');
         }
     }
+
+    /**
+     * @param stdClass $data row data
+     * @return string HTML for the column
+     */
+    public function col_gitcommits($data) {
+
+        if (empty($data->gitcommits)) {
+            return $data->gitcommits;
+
+        } else {
+            if (empty($data->realuserid)) {
+                return html_writer::link(new moodle_url('/local/dev/gitcommits.php', array(
+                    'version' => $data->version,
+                    'lastname' => $data->lastname,
+                    'firstname' => $data->firstname,
+                    'email' => $data->email,
+                    'merges' => 0,
+                )), $data->gitcommits);
+
+            } else {
+                return html_writer::link(new moodle_url('/local/dev/gitcommits.php', array(
+                    'version' => $data->version,
+                    'userid' => $data->realuserid,
+                    'merges' => 0,
+                )), $data->gitcommits);
+            }
+        }
+    }
+
+    /**
+     * @param stdClass $data row data
+     * @return string HTML for the column
+     */
+    public function col_gitmerges($data) {
+
+        if (empty($data->gitmerges)) {
+            return $data->gitmerges;
+
+        } else {
+            if (empty($data->realuserid)) {
+                return html_writer::link(new moodle_url('/local/dev/gitcommits.php', array(
+                    'version' => $data->version,
+                    'lastname' => $data->lastname,
+                    'firstname' => $data->firstname,
+                    'email' => $data->email,
+                    'merges' => 1,
+                )), $data->gitmerges);
+
+            } else {
+                return html_writer::link(new moodle_url('/local/dev/gitcommits.php', array(
+                    'version' => $data->version,
+                    'userid' => $data->realuserid,
+                    'merges' => 1,
+                )), $data->gitmerges);
+            }
+        }
+    }
 }

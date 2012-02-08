@@ -31,4 +31,25 @@ defined('MOODLE_INTERNAL') || die();
  */
 class local_dev_renderer extends plugin_renderer_base {
 
+    /**
+     * @param stdClass $commit data
+     * @return string
+     */
+    public function git_commit($commit) {
+
+        $hash = html_writer::link($commit->urlcommit, s($commit->commithash));
+        if (!empty($commit->urlauthor)) {
+            $author = html_writer::link($commit->urlauthor, s($commit->author));
+        } else {
+            $author = s($commit->author);
+        }
+        $text = sprintf(s("commit %s
+Author: %s <%s>
+Date:   %s
+
+    %s
+
+"), $hash, $author, s($commit->email), s(date('r', $commit->authordate)), s($commit->subject));
+        return html_writer::tag('pre', $text, array('class' => 'gitcommit'));
+    }
 }

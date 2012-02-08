@@ -37,6 +37,14 @@
     background-color: #efefef;
 }
 
+#page-local-dev-gitcommits pre.gitcommit {
+    width: 80%;
+    margin: 0.2em auto;
+    background-color: white;
+    border: 1px solid #efefef;
+    padding: 0.5em;
+}
+
 .path-local-dev .generalbox {
     width: 80%;
     margin-left: auto;
