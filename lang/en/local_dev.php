@@ -24,11 +24,17 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['adminoverview'] = 'Overview';
+$string['contributions'] = 'Contributions';
+$string['contributionsheading'] = 'Contributions to Moodle {$a}';
 $string['dev:manage'] = 'Manage the Developers plugin';
+$string['developers'] = 'Developers';
+$string['developersinfo'] = 'Many thanks goes to those who have ever contributed substantial and ongoing amounts of time to writing Moodle code and helping it grow. This is the list of people with some commits in the main Moodle repository.';
 $string['gitaliases'] = 'Git aliases';
 $string['gitaliasesassign'] = 'Assign';
 $string['gitaliasescommits'] = 'Commits';
 $string['gitaliasesconflict'] = 'The alias already exists for another user';
 $string['gitaliasesemail'] = 'Email';
 $string['gitaliasesfullname'] = 'Name';
-$string['pluginname'] = 'Developers';
+$string['gitcommits'] = 'Git commits';
+$string['gitmerges'] = 'Git merges';
+$string['pluginname'] = 'Developer credits';

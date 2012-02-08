@@ -19,15 +19,15 @@
         <FIELD NAME="userlastname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="User last name, if the id is not known" PREVIOUS="userid" NEXT="userfirstname"/>
         <FIELD NAME="userfirstname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="User firstname, if id is unknown" PREVIOUS="userlastname" NEXT="useremail"/>
         <FIELD NAME="useremail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="User email, if id is unknown" PREVIOUS="userfirstname" NEXT="version"/>
-        <FIELD NAME="version" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle version this activity should be considered as a part of" PREVIOUS="useremail" NEXT="type"/>
-        <FIELD NAME="type" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Tyoe of the activity" PREVIOUS="version" NEXT="amount"/>
-        <FIELD NAME="amount" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="Amount of the activity" PREVIOUS="type"/>
+        <FIELD NAME="version" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle version this activity should be considered as a part of" PREVIOUS="useremail" NEXT="gitcommits"/>
+        <FIELD NAME="gitcommits" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="version" NEXT="gitmerges"/>
+        <FIELD NAME="gitmerges" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="gitcommits"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="uq_userversiontype" UNIQUE="true" FIELDS="userid, version, type"/>
+        <INDEX NAME="uq_versionuser" UNIQUE="true" FIELDS="version, userid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="dev_git_commits" COMMENT="Stores the Git commit records" PREVIOUS="dev_activity" NEXT="dev_git_commit_branches">

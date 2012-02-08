@@ -1,0 +1,45 @@
+#page-local-dev-index .generalbox p {
+    font-weight:bold;
+}
+
+#page-local-dev-contributions .box.versionselector {
+    width: 60%;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#page-local-dev-contributions .initialbar a {
+    margin-left: 0.3em;
+}
+
+#page-local-dev-contributions table.flexible {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#page-local-dev-contributions table.flexible td {
+    text-align: center;
+}
+
+#page-local-dev-contributions table.flexible td.c1,
+#page-local-dev-contributions table.flexible td.c2,
+#page-local-dev-contributions table.flexible td.c3,
+#page-local-dev-contributions table.flexible td.c4 {
+    text-align: left;
+}
+
+#page-local-dev-contributions table.flexible td.c0 {
+    padding: 3px;
+}
+
+#page-local-dev-contributions table.flexible tr:hover td {
+    background-color: #efefef;
+}
+
+.path-local-dev .generalbox {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: white;
+}

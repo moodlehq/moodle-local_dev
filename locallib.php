@@ -25,10 +25,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-interface aggregable {
-    public function on_execute();
-}
-
 /**
  * Manages activity aggregation
  *
@@ -51,10 +47,10 @@ class dev_aggregator {
         if (!class_exists($classname)) {
             throw new coding_exception('The given class does not exist', $classname);
         }
-        if (!in_array('aggregable', class_implements($classname))) {
-            throw new coding_exception('The given class does not implement aggregable interface', $classname);
+        if (!in_array('dev_aggregator_subsystem', class_parents($classname))) {
+            throw new coding_exception('The given class does extends dev_aggregator_subsystem', $classname);
         }
-        $this->sources['name'] = new $classname($name, $this);
+        $this->sources[$name] = new $classname($name, $this);
     }
 
     /**
@@ -67,10 +63,11 @@ class dev_aggregator {
     }
 }
 
+
 /**
  * Base class for all aggregable subsystems
  */
-abstract class dev_aggregator_subsystem implements aggregable {
+abstract class dev_aggregator_subsystem {
 
     /** @var string the aggregation subsystem type */
     protected $type;
@@ -87,6 +84,11 @@ abstract class dev_aggregator_subsystem implements aggregable {
     }
 
     /**
+     * Do the actual aggregation
+     */
+    abstract public function on_execute();
+
+    /**
      * @return aggregation subsystem type
      */
     public function get_type() {
@@ -94,39 +96,55 @@ abstract class dev_aggregator_subsystem implements aggregable {
     }
 
     /**
+     * @return string the column name in {dev_activity} to put metric of this activity
+     */
+    protected function get_metric_column() {
+        return $this->get_type();
+    }
+
+    /**
      * Updates the activity record or registers a new one
      *
-     * @param stdClass $activity
+     * @param int|stdClass user id or an object with firstname, lastname and email properties
+     * @param string $version the Moodle version (major.minor) to count this activity for
+     * @param int $metric non-negative "amount" of the activity
      * @return int the record id
      */
-    protected function update_activity(stdClass $activity) {
+    protected function update_activity($user, $version, $metric) {
         global $DB;
 
-        if (empty($activity->type)
-                or empty($activity->version)
-                or (empty($activity->userid) and empty($activity->useremail))) {
-            throw new coding_exception('Missing activity data', json_encode($activity));
+        if (empty($user)) {
+            throw new coding_exception('Missing user identification');
         }
 
-        $conditions = array('type' => $activity->type, 'version' => $activity->version);
+        if (empty($version)) {
+            throw new coding_exception('Missing version');
+        }
 
-        if (isset($activity->userid)) {
-             $conditions['userid'] = $activity->userid;
+        $conditions = array('version' => $version);
+
+        $record = new stdClass();
+        $record->version = $version;
+
+        if (is_int($user)) {
+            $conditions['userid'] = $record->userid = $user;
         } else {
-            $conditions['userfirstname'] = $activity->userfirstname;
-            $conditions['userlastname'] = $activity->userlastname;
-            $conditions['useremail'] = $activity->useremail;
+            $conditions['userfirstname'] = $record->userfirstname = $user->firstname;
+            $conditions['userlastname']  = $record->userlastname  = $user->lastname;
+            $conditions['useremail']     = $record->useremail     = $user->email;
         }
 
         $current = $DB->get_record('dev_activity', $conditions, '*', IGNORE_MISSING);
 
+        $col = $this->get_metric_column();
+
         if (!$current) {
-            $id = $DB->insert_record('dev_activity', $activity);
+            $record->$col = $metric;
+            $id = $DB->insert_record('dev_activity', $record);
         } else {
             $id = $current->id;
-            if ($activity->amount <> $current->amount) {
-                $current->amount = $activity->amount;
-                $DB->update_record('dev_activity', $current);
+            if ($metric <> $current->$col) {
+                $DB->set_field('dev_activity', $col, $metric, array('id' => $id));
             }
         }
 
@@ -167,24 +185,21 @@ abstract class dev_git_aggregator extends dev_aggregator_subsystem {
 
         // update the aggregated values in the database
 
-        $legacy = $DB->get_fieldset_select('dev_activity', 'id', "type = ?", array($this->get_type()));
+        $legacy = $DB->get_fieldset_select('dev_activity', 'id', '');
         $legacy = array_flip($legacy);
 
         foreach ($commits as $userid => $versions) {
-            foreach ($versions as $version => $amount) {
-                $activity = new stdClass();
-                $activity->type = $this->get_type();
-                $activity->version = $version;
+            foreach ($versions as $version => $metric) {
                 if (is_numeric($userid)) {
-                    $activity->userid = $userid;
+                    $user = $userid;
                 } else {
-                    $activity->userfirstname = $unknownusers[$userid]->firstname;
-                    $activity->userlastname = $unknownusers[$userid]->lastname;
-                    $activity->useremail = $unknownusers[$userid]->email;
+                    $user = new stdClass();
+                    $user->firstname = $unknownusers[$userid]->firstname;
+                    $user->lastname = $unknownusers[$userid]->lastname;
+                    $user->email = $unknownusers[$userid]->email;
                 }
-                $activity->amount = $amount;
 
-                $id = $this->update_activity($activity);
+                $id = $this->update_activity($user, $version, $metric);
                 if (isset($legacy[$id])) {
                     // this activity id is up-to-date now
                     unset($legacy[$id]);
@@ -192,8 +207,11 @@ abstract class dev_git_aggregator extends dev_aggregator_subsystem {
             }
         }
 
-        // remove all legacy activity records
-        $DB->delete_records_list('dev_activity', 'id', array_keys($legacy));
+        // reset the legacy records to NULL
+        if (!empty($legacy)) {
+            list($where, $params) = $DB->get_in_or_equal(array_keys($legacy));
+            $DB->set_field_select('dev_activity', $this->get_metric_column(), null, "id $where", $params);
+        }
     }
 
     /**
@@ -250,7 +268,7 @@ abstract class dev_git_aggregator extends dev_aggregator_subsystem {
 /**
  * Aggregates non-merge commits in moodle.git
  */
-class dev_commits_aggregator extends dev_git_aggregator {
+class dev_gitcommits_aggregator extends dev_git_aggregator {
 
     /**
      * Returns SQL to get the number of non-merge commits in moodle.git
@@ -271,7 +289,7 @@ class dev_commits_aggregator extends dev_git_aggregator {
 /**
  * Aggregates merge commits in moodle.git
  */
-class dev_merges_aggregator extends dev_git_aggregator {
+class dev_gitmerges_aggregator extends dev_git_aggregator {
 
     /**
      * Returns SQL to get the number of non-merge commits in moodle.git
@@ -340,8 +358,7 @@ class dev_git_aliases_manager {
             $sql = "UPDATE {dev_git_commits}
                        SET userid = u.id
                       FROM {user} u
-                     WHERE {dev_git_commits}.userid IS NULL
-                           AND u.email = {dev_git_commits}.authoremail";
+                     WHERE u.email = {dev_git_commits}.authoremail";
             $DB->execute($sql);
 
             $sql = "UPDATE {dev_git_commits}
@@ -367,15 +384,15 @@ class dev_git_aliases_manager {
         } else {
             $sql = "UPDATE {dev_git_commits}
                        SET userid = (SELECT id
-                                       FROM {user}
-                                      WHERE authoremail = {user}.email})";
+                                       FROM {user} u
+                                      WHERE {dev_git_commits}.authoremail = u.email)";
             $DB->execute($sql);
 
             $sql = "UPDATE {dev_git_commits}
                        SET userid = (SELECT userid
-                                       FROM {dev_git_user_aliases}
-                                      WHERE authorname = {dev_git_commits}.authorname
-                                        AND authoremail = {dev_git_commits}.authoremail)";
+                                       FROM {dev_git_user_aliases} a
+                                      WHERE a.fullname = {dev_git_commits}.authorname
+                                        AND a.email = {dev_git_commits}.authoremail)";
             $DB->execute($sql);
         }
     }

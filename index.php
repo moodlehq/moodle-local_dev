@@ -23,6 +23,7 @@
 
 require(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once($CFG->dirroot.'/local/dev/locallib.php');
+require_once($CFG->dirroot.'/local/dev/tablelib.php');
 
 //require_login(SITEID, false);
 
@@ -34,5 +35,31 @@ $PAGE->set_heading(get_string('pluginname', 'local_dev'));
 
 $output = $PAGE->get_renderer('local_dev');
 
+$sql = "SELECT DISTINCT a.userid, COALESCE(u.firstname, a.userfirstname) AS firstname,
+               COALESCE(u.lastname, a.userlastname) AS lastname
+          FROM {dev_activity} a
+     LEFT JOIN {user} u ON (a.userid = u.id)
+         WHERE a.gitcommits IS NOT NULL
+      ORDER BY lastname, firstname";
+
+$rs = $DB->get_recordset_sql($sql);
+$names = array();
+foreach ($rs as $record) {
+    if ($record->firstname === 'Moodle HQ git') {
+        continue;
+    }
+    if (is_null($record->userid)) {
+        $names[] = fullname($record);
+    } else {
+        $names[] = html_writer::link(new moodle_url('/user/profile.php', array('id' => $record->userid)), fullname($record));
+    }
+}
+$rs->close();
+
 echo $output->header();
+echo $output->heading(get_string('developers', 'local_dev'));
+echo $output->box(
+    html_writer::tag('p', get_string('developersinfo', 'local_dev')).
+    html_writer::tag('div', implode(', ', $names))
+);
 echo $output->footer();
