@@ -54,7 +54,7 @@ class dev_aggregator {
         if (!in_array('aggregable', class_implements($classname))) {
             throw new coding_exception('The given class does not implement aggregable interface', $classname);
         }
-        $this->sources['name'] = new $classname($this);
+        $this->sources['name'] = new $classname($name, $this);
     }
 
     /**
@@ -72,14 +72,25 @@ class dev_aggregator {
  */
 abstract class dev_aggregator_subsystem implements aggregable {
 
+    /** @var string the aggregation subsystem type */
+    protected $type;
+
     /** @var dev_aggregator the master aggregator class that executes aggregation */
     protected $parentaggregator;
 
     /**
      * @param dev_aggregator $pardev_aggregator_subsystementaggregator the class that runs the execution
      */
-    public function __construct(dev_aggregator $parentaggregator) {
+    public function __construct($type, dev_aggregator $parentaggregator) {
+        $this->type = $type;
         $this->parentaggregator = $parentaggregator;
+    }
+
+    /**
+     * @return aggregation subsystem type
+     */
+    public function get_type() {
+        return $this->type;
     }
 
     /**
@@ -124,23 +135,19 @@ abstract class dev_aggregator_subsystem implements aggregable {
 }
 
 /**
- * Aggregates number of commits in moodle.git repository
+ * Common class for aggregating commits in moodle.git repository
  */
-class dev_git_aggregator extends dev_aggregator_subsystem {
+abstract class dev_git_aggregator extends dev_aggregator_subsystem {
 
     /**
-     * @inheritdoc
+     * Aggregate commits
      */
     public function on_execute() {
         global $DB;
 
         // aggregate the number of commits into a big in-memory array first
 
-        $sql = "SELECT c.tag, u.id, c.authorname, c.authoremail, COUNT(*) AS commits
-                  FROM {dev_git_commits} c
-             LEFT JOIN {user} u ON c.userid = u.id
-                 WHERE c.tag <> ''
-              GROUP BY c.tag, u.id, c.authorname, c.authoremail";
+        $sql = $this->get_sql();
 
         $rs = $DB->get_recordset_sql($sql);
         $commits = array();
@@ -160,13 +167,13 @@ class dev_git_aggregator extends dev_aggregator_subsystem {
 
         // update the aggregated values in the database
 
-        $legacy = $DB->get_fieldset_select('dev_activity', 'id', "type = 'git'");
+        $legacy = $DB->get_fieldset_select('dev_activity', 'id', "type = ?", array($this->get_type()));
         $legacy = array_flip($legacy);
 
         foreach ($commits as $userid => $versions) {
             foreach ($versions as $version => $amount) {
                 $activity = new stdClass();
-                $activity->type = 'git';
+                $activity->type = $this->get_type();
                 $activity->version = $version;
                 if (is_numeric($userid)) {
                     $activity->userid = $userid;
@@ -238,6 +245,49 @@ class dev_git_aggregator extends dev_aggregator_subsystem {
         }
     }
 }
+
+
+/**
+ * Aggregates non-merge commits in moodle.git
+ */
+class dev_commits_aggregator extends dev_git_aggregator {
+
+    /**
+     * Returns SQL to get the number of non-merge commits in moodle.git
+     *
+     * @return string
+     */
+    protected function get_sql() {
+        $sql = "SELECT c.tag, u.id, c.authorname, c.authoremail, COUNT(*) AS commits
+                  FROM {dev_git_commits} c
+             LEFT JOIN {user} u ON c.userid = u.id
+                 WHERE c.tag <> '' AND c.merge = 0
+              GROUP BY c.tag, u.id, c.authorname, c.authoremail";
+        return $sql;
+    }
+}
+
+
+/**
+ * Aggregates merge commits in moodle.git
+ */
+class dev_merges_aggregator extends dev_git_aggregator {
+
+    /**
+     * Returns SQL to get the number of non-merge commits in moodle.git
+     *
+     * @return string
+     */
+    protected function get_sql() {
+        $sql = "SELECT c.tag, u.id, c.authorname, c.authoremail, COUNT(*) AS commits
+                  FROM {dev_git_commits} c
+             LEFT JOIN {user} u ON c.userid = u.id
+                 WHERE c.tag <> '' AND c.merge = 1
+              GROUP BY c.tag, u.id, c.authorname, c.authoremail";
+        return $sql;
+    }
+}
+
 
 /**
  * Manages Git user aliases

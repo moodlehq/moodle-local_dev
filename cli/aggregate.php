@@ -43,5 +43,6 @@ if ($options['help']) {
 }
 
 $aggregator = new dev_aggregator();
-$aggregator->add_source('git');
+$aggregator->add_source('commits');
+$aggregator->add_source('merges');
 $aggregator->execute();
