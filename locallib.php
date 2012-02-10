@@ -57,8 +57,143 @@ class dev_aggregator {
      * Executes all aggregators
      */
     public function execute() {
+        // set all current aggregations to NULL
+        $this->invalidate_aggregations();
+        // let all collector to aggregate their own data per version
         foreach ($this->sources as $name => $aggregator) {
             $aggregator->on_execute();
+        }
+        // and aggregate all them all by branch
+        $this->aggregate_versions();
+    }
+
+    /**
+     * Updates the activity record or registers a new one
+     *
+     * @param int|stdClass user id or an object with firstname, lastname and email properties
+     * @param string $version the Moodle version (major.minor) or branch (major.x) to count this activity for
+     * @param string $type the activity type, eg. "gitcommits"
+     * @param int $metric non-negative "amount" of the activity type
+     */
+    public static function update_activity($user, $version, $type, $metric) {
+        global $DB;
+
+        if (empty($user)) {
+            throw new coding_exception('Missing user identification');
+        }
+
+        if (empty($version)) {
+            throw new coding_exception('Missing version');
+        }
+
+        $conditions = array('version' => $version);
+
+        $record = new stdClass();
+        $record->version = $version;
+
+        if (is_numeric($user)) {
+            $conditions['userid'] = $record->userid = $user;
+        } else if (property_exists($user, 'email') and property_exists($user, 'lastname') and property_exists($user, 'firstname')) {
+            $conditions['userfirstname'] = $record->userfirstname = $user->firstname;
+            $conditions['userlastname']  = $record->userlastname  = $user->lastname;
+            $conditions['useremail']     = $record->useremail     = $user->email;
+        } else {
+            throw new coding_exception('Missing user property');
+        }
+
+        $current = $DB->get_record('dev_activity', $conditions, '*', IGNORE_MISSING);
+
+        if (!$current) {
+            $record->$type = $metric;
+            $DB->insert_record('dev_activity', $record);
+        } else {
+            if ($metric !== $current->$type) {
+                $DB->set_field('dev_activity', $type, $metric, array('id' => $current->id));
+            }
+        }
+    }
+
+    /**
+     * Returns the list of known branches and versions they contain
+     *
+     * Branches are like strings like '2.1.x'. Versions are strings like '2.1.2'.
+     * Versions are ordered in the reverse chronological order within the branch.
+     *
+     * @return array (string)branch => (string)versions
+     */
+    public static function get_branches() {
+        global $DB;
+
+        // get all know versions in the dev_activity table
+        $knownversions = $DB->get_records_select("dev_activity", $DB->sql_like("version", "?", false, false, true),
+            array('%.x'), '', "DISTINCT version");
+
+        if (empty($knownversions)) {
+            return array();
+        }
+
+        // sort the returned version (desc)
+        $versions = array();
+        foreach (array_keys($knownversions) as $knownversion) {
+            $bits = explode('.', $knownversion, 3);
+            $versions[$bits[0]*1e9 + $bits[1]*1e6 + $bits[2]*1e3] = $knownversion;
+        }
+        unset($knownversions);
+        krsort($versions);
+
+        // organise versions per branch
+        $branches = array();
+        foreach ($versions as $version) {
+            $bits = explode('.', $version, 3);
+            $branches[$bits[0].'.'.$bits[1].'.x'][] = $version;
+        }
+        unset($versions);
+
+        return $branches;
+    }
+
+    /// End of external API ///
+
+    /**
+     * Sets all metrics to NULL
+     */
+    protected function invalidate_aggregations() {
+        global $DB;
+
+        foreach ($this->sources as $name => $aggregator) {
+            $DB->set_field("dev_activity", $aggregator->get_metric_column(), null);
+        }
+    }
+
+    /**
+     * Aggregates all activity metrics from all versions on the branch into a single value
+     */
+    protected function aggregate_versions() {
+        global $DB;
+
+        foreach (self::get_branches() as $branch => $versions) {
+            foreach ($this->sources as $name => $aggregator) {
+                list($sqlversions, $params) = $DB->get_in_or_equal($versions);
+                $sql = "SELECT userid, userlastname, userfirstname, useremail,
+                               SUM(".$aggregator->get_metric_column().") AS metric
+                          FROM {dev_activity}
+                         WHERE version $sqlversions
+                      GROUP BY userid, userlastname, userfirstname, useremail";
+
+                $rs = $DB->get_recordset_sql($sql, $params);
+                foreach ($rs as $record) {
+                    if (empty($record->userid)) {
+                        $user = new stdClass();
+                        $user->firstname = $record->userfirstname;
+                        $user->lastname  = $record->userlastname;
+                        $user->email     = $record->useremail;
+                    } else {
+                        $user = $record->userid;
+                    }
+                    dev_aggregator::update_activity($user, $branch, $aggregator->get_metric_column(), $record->metric);
+                }
+                $rs->close();
+            }
         }
     }
 }
@@ -98,58 +233,10 @@ abstract class dev_aggregator_subsystem {
     /**
      * @return string the column name in {dev_activity} to put metric of this activity
      */
-    protected function get_metric_column() {
+    public function get_metric_column() {
         return $this->get_type();
     }
 
-    /**
-     * Updates the activity record or registers a new one
-     *
-     * @param int|stdClass user id or an object with firstname, lastname and email properties
-     * @param string $version the Moodle version (major.minor) to count this activity for
-     * @param int $metric non-negative "amount" of the activity
-     * @return int the record id
-     */
-    protected function update_activity($user, $version, $metric) {
-        global $DB;
-
-        if (empty($user)) {
-            throw new coding_exception('Missing user identification');
-        }
-
-        if (empty($version)) {
-            throw new coding_exception('Missing version');
-        }
-
-        $conditions = array('version' => $version);
-
-        $record = new stdClass();
-        $record->version = $version;
-
-        if (is_int($user)) {
-            $conditions['userid'] = $record->userid = $user;
-        } else {
-            $conditions['userfirstname'] = $record->userfirstname = $user->firstname;
-            $conditions['userlastname']  = $record->userlastname  = $user->lastname;
-            $conditions['useremail']     = $record->useremail     = $user->email;
-        }
-
-        $current = $DB->get_record('dev_activity', $conditions, '*', IGNORE_MISSING);
-
-        $col = $this->get_metric_column();
-
-        if (!$current) {
-            $record->$col = $metric;
-            $id = $DB->insert_record('dev_activity', $record);
-        } else {
-            $id = $current->id;
-            if ($metric <> $current->$col) {
-                $DB->set_field('dev_activity', $col, $metric, array('id' => $id));
-            }
-        }
-
-        return $id;
-    }
 }
 
 /**
@@ -185,9 +272,6 @@ abstract class dev_git_aggregator extends dev_aggregator_subsystem {
 
         // update the aggregated values in the database
 
-        $legacy = $DB->get_fieldset_select('dev_activity', 'id', '');
-        $legacy = array_flip($legacy);
-
         foreach ($commits as $userid => $versions) {
             foreach ($versions as $version => $metric) {
                 if (is_numeric($userid)) {
@@ -198,19 +282,8 @@ abstract class dev_git_aggregator extends dev_aggregator_subsystem {
                     $user->lastname = $unknownusers[$userid]->lastname;
                     $user->email = $unknownusers[$userid]->email;
                 }
-
-                $id = $this->update_activity($user, $version, $metric);
-                if (isset($legacy[$id])) {
-                    // this activity id is up-to-date now
-                    unset($legacy[$id]);
-                }
+                dev_aggregator::update_activity($user, $version, $this->get_metric_column(), $metric);
             }
-        }
-
-        // reset the legacy records to NULL
-        if (!empty($legacy)) {
-            list($where, $params) = $DB->get_in_or_equal(array_keys($legacy));
-            $DB->set_field_select('dev_activity', $this->get_metric_column(), null, "id $where", $params);
         }
     }
 
