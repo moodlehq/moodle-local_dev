@@ -30,10 +30,11 @@ require_once($CFG->dirroot.'/local/dev/tablelib.php');
 //require_login(SITEID, false);
 
 $version = required_param('version', PARAM_RAW);
-$clean = preg_replace('/[^0-9\.]/', '', $version);
+$clean = preg_replace('/[^x0-9\.]/', '', $version);
 if ($version !== $clean) {
     print_error('missingparameter');
 }
+
 $userid = optional_param('userid', null, PARAM_INT);
 if (empty($userid)) {
     $lastname = required_param('lastname', PARAM_RAW);
@@ -57,7 +58,7 @@ $sql = "SELECT c.*,
           FROM {dev_git_commits} c
      LEFT JOIN {user} u ON (c.userid = u.id)
          WHERE ".$DB->sql_like("c.tag", "?", false, false)." ";
-$params = array('v'.$DB->sql_like_escape($version).'%');
+$params = array('v'.$DB->sql_like_escape(str_replace('x', '', $version)).'%');
 
 if (!empty($userid)) {
     $sql .= " AND c.userid = ? ";
@@ -75,15 +76,31 @@ $params[] = $merges;
 $sql .= " ORDER BY c.authordate DESC";
 
 echo $output->header();
-echo $output->heading(get_string('gitcommits', 'local_dev'));
 
 $rs = $DB->get_recordset_sql($sql, $params);
+$headprinted = false;
 foreach ($rs as $commit) {
     $commit->urlcommit = new moodle_url('https://github.com/moodle/moodle/commit/'.$commit->commithash);
     if ($commit->userid) {
         $commit->urlauthor = new moodle_url('/user/profile.php', array('id' => $commit->userid));
     } else {
         $commit->urlauthor = null;
+    }
+    if (!$headprinted) {
+        $a = new stdClass();
+        $a->author = $commit->author;
+        $a->email = $commit->email;
+        $a->version = $version;
+        if ($merges) {
+            echo $output->heading(s(get_string('gitmergesby', 'local_dev', $a)));
+        } else {
+            echo $output->heading(s(get_string('gitcommitsby', 'local_dev', $a)));
+        }
+        echo $output->box(
+            $output->single_button(new moodle_url('contributions.php', array('version' => $version)), get_string('back'), 'get'),
+            array('generalbox backbutton'));
+        unset($a);
+        $headprinted = true;
     }
     echo $output->git_commit($commit);
 }
