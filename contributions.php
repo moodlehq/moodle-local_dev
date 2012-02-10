@@ -74,7 +74,10 @@ if (!$validversion) {
     echo $output->heading(get_string('contributionsversion', 'local_dev', $version));
 }
 
-echo $output->box($output->single_select($PAGE->url, 'version', $options, $version), array('generalbox versionselector'));
+$select = new single_select($PAGE->url, 'version', $options, $version);
+$select->set_label(get_string('contributionsversionselect', 'local_dev'));
+
+echo $output->box($output->render($select), array('generalbox versionselector'));
 
 if (!$validversion) {
     echo $output->footer();

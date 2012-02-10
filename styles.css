@@ -10,6 +10,11 @@
     margin-right: auto;
 }
 
+#page-local-dev-contributions .box.versionselector label {
+    margin-left: 1ex;
+    margin-right: 1ex;
+}
+
 #page-local-dev-contributions .initialbar a {
     margin-left: 0.3em;
 }

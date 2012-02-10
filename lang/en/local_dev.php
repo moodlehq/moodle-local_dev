@@ -28,6 +28,7 @@ $string['allversions'] = '{$a} (all)';
 $string['contributions'] = 'Contributions';
 $string['contributionsversion'] = 'Contributions to Moodle {$a}';
 $string['contributionsversioninvalid'] = 'Version {$a} is not valid, please choose the version from the menu';
+$string['contributionsversionselect'] = 'Display report for Moodle version';
 $string['dev:manage'] = 'Manage the Developers plugin';
 $string['developers'] = 'Developers';
 $string['developersinfo'] = 'Many thanks goes to those who have ever contributed substantial and ongoing amounts of time to writing Moodle code and helping it grow. This is the list of people with some commits in the main Moodle repository.';
