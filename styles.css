@@ -1,5 +1,7 @@
-#page-local-dev-index .generalbox p {
-    font-weight:bold;
+#page-local-dev-index .devscloud {
+    border: 1px solid #efefef;
+    background-color: white;
+    padding: 1em;
 }
 
 #page-local-dev-contributions .box.versionselector,

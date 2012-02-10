@@ -16,6 +16,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Displays the cloud of developer names
+ *
  * @package     local_dev
  * @copyright   2012 David Mudrak <david@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -35,41 +37,45 @@ $PAGE->set_heading(get_string('pluginname', 'local_dev'));
 
 $output = $PAGE->get_renderer('local_dev');
 
-$sql = "SELECT DISTINCT a.userid, COALESCE(u.firstname, a.userfirstname) AS firstname,
-               COALESCE(u.lastname, a.userlastname) AS lastname, a.gitcommits, a.gitmerges
-          FROM {dev_activity} a
-     LEFT JOIN {user} u ON (a.userid = u.id)
-         WHERE a.gitcommits IS NOT NULL
-      ORDER BY lastname, firstname";
+$sql = "SELECT c.userid,
+               COALESCE(".$DB->sql_concat("u.firstname", "' '", "u.lastname").", c.authorname) AS xname,
+               COALESCE(u.email, c.authorname) AS xemail,
+               COUNT(c.commithash) AS xcommits
+          FROM {dev_git_commits} c
+     LEFT JOIN {user} u ON (c.userid = u.id)
+      GROUP BY userid, xname, xemail";
 
-$rs = $DB->get_recordset_sql($sql);
+$rs = $DB->get_recordset_sql($sql, array('%.x'));
 $devs = array();
 $max = 1;
 foreach ($rs as $record) {
-    if ($record->firstname === 'Moodle HQ git') {
-        continue;
-    }
     $dev = new stdClass();
+    $fullname = s(trim($record->xname));
+    $fullname = html_writer::tag('span', $fullname, array('class' => 'cx'.$record->xcommits));
     if (is_null($record->userid)) {
-        $dev->name = s(fullname($record));
+        $dev->name = $fullname;
     } else {
-        $dev->name = html_writer::link(new moodle_url('/user/profile.php', array('id' => $record->userid)), s(fullname($record)));
+        $dev->name = html_writer::link(new moodle_url('/user/profile.php', array('id' => $record->userid)), $fullname);
     }
-    $dev->commits = $record->gitcommits + $record->gitmerges;
+    $dev->commits = $record->xcommits;
     $max = $dev->commits > $max ? $dev->commits : $max;
     $devs[] = $dev;
 }
 $rs->close();
+shuffle($devs);
 
 echo $output->header();
 echo $output->heading(get_string('developers', 'local_dev'));
-echo $output->box_start();
-echo html_writer::tag('p', get_string('developersinfo', 'local_dev'));
-echo html_writer::start_tag('div', array('class' => 'devscloud'));
+echo $output->box(get_string('developersinfo', 'local_dev'));
+echo $output->box_start(array('devscloud'));
 foreach ($devs as $dev) {
-    $rel = round($dev->commits / $max * 100);
-    echo html_writer::tag('span', ' '.$dev->name.' ', array('style' => 'font-size:'.min(300, max(90, $rel*50)).'%'));
+    if ($dev->commits <= 1 or $max == 0) {
+        $rel = 0;
+    } else {
+        $rel = round(log($dev->commits) / log($max) * 100);
+    }
+    $rel = 3 * max($rel, 25);
+    echo html_writer::tag('span', ' '.$dev->name.' ', array('style' => sprintf('font-size:%d%%', $rel)));
 }
-echo html_writer::end_tag('div');
 echo $output->box_end();
 echo $output->footer();
