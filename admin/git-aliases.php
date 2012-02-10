@@ -75,6 +75,7 @@ $table->head = array(
     get_string('gitaliasesassign', 'local_dev'),
 );
 
+
 foreach ($rs as $record) {
     $table->data[] = array(
         html_writer::tag('div', s($record->authorname), array('class' => 'aliasdata-authorname')),
@@ -96,5 +97,20 @@ foreach ($rs as $record) {
 }
 echo html_writer::table($table);
 $rs->close();
+
+// simple form for explicit alias (to overwrite default mapping based on email)
+
+echo html_writer::tag('form',
+    html_writer::tag('div',
+        html_writer::tag('legend', get_string('gitaliasesfullname', 'local_dev'), array('for' => 'explicit-authorname')).
+        html_writer::empty_tag('input', array('type' => 'text', 'id' => 'explicit-authorname', 'name' => 'authorname')).
+        html_writer::tag('legend', get_string('gitaliasesemail', 'local_dev'), array('for' => 'explicit-authoremail')).
+        html_writer::empty_tag('input', array('type' => 'text', 'id' => 'explicit-authoremail', 'name' => 'authoremail')).
+        html_writer::tag('legend', get_string('gitaliasesassign', 'local_dev'), array('for' => 'explicit-userid')).
+        html_writer::empty_tag('input', array('type' => 'text', 'id' => 'explicit-userid', 'name' => 'userid', 'maxlength' => 100, 'size' => 5)).
+        html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey())).
+        html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('submit')))
+    ),
+    array('method' => 'post', 'action' => $PAGE->url->out()));
 
 echo $output->footer();
