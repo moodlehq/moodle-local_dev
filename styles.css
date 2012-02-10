@@ -2,7 +2,8 @@
     font-weight:bold;
 }
 
-#page-local-dev-contributions .box.versionselector {
+#page-local-dev-contributions .box.versionselector,
+#page-local-dev-gitcommits .box.backbutton {
     width: 60%;
     text-align: center;
     margin-left: auto;

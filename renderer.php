@@ -49,7 +49,7 @@ Date:   %s
 
     %s
 
-"), $hash, $author, s($commit->email), s(date('r', $commit->authordate)), s($commit->subject));
+"), $hash, $author, s($commit->email), s(date('r', $commit->authordate)), format_string(s($commit->subject)));
         return html_writer::tag('pre', $text, array('class' => 'gitcommit'));
     }
 }

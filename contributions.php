@@ -26,11 +26,11 @@ require_once($CFG->dirroot.'/local/dev/locallib.php');
 require_once($CFG->dirroot.'/local/dev/tablelib.php');
 
 $version = optional_param('version', null, PARAM_RAW);
+if (empty($version)) {
+    $version = null;
+}
 if (!is_null($version)) {
     $clean = preg_replace('/[^x0-9\.]/', '', $version);
-    if ($version !== $clean) {
-        $version = null;
-    }
 }
 
 //require_login(SITEID, false);
@@ -65,12 +65,13 @@ echo $output->header();
 
 if (!$validversion) {
     // the version has the correct format but is not known, for example 1.8.99
-    echo $output->heading(get_string('invalidversion', 'local_dev', $version));
-}
-
-if (is_null($version)) {
-    // version not specified or has invalid format - choose the most recent version by default
-    $version = reset(reset($branches));
+    echo $output->heading(get_string('contributionsversioninvalid', 'local_dev', $version));
+} else {
+    if (is_null($version)) {
+        // version not specified or has invalid format - use the most recent version by the default
+        $version = reset(reset($branches));
+    }
+    echo $output->heading(get_string('contributionsversion', 'local_dev', $version));
 }
 
 echo $output->box($output->single_select($PAGE->url, 'version', $options, $version), array('generalbox versionselector'));
@@ -79,8 +80,6 @@ if (!$validversion) {
     echo $output->footer();
     die();
 }
-
-echo $output->heading(get_string('contributionsheading', 'local_dev', $version));
 
 $metrics = array('gitcommits', 'gitmerges');
 $table = new dev_activity_table_sql('dev-activity-table');

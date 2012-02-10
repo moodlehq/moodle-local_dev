@@ -36,30 +36,40 @@ $PAGE->set_heading(get_string('pluginname', 'local_dev'));
 $output = $PAGE->get_renderer('local_dev');
 
 $sql = "SELECT DISTINCT a.userid, COALESCE(u.firstname, a.userfirstname) AS firstname,
-               COALESCE(u.lastname, a.userlastname) AS lastname
+               COALESCE(u.lastname, a.userlastname) AS lastname, a.gitcommits, a.gitmerges
           FROM {dev_activity} a
      LEFT JOIN {user} u ON (a.userid = u.id)
          WHERE a.gitcommits IS NOT NULL
       ORDER BY lastname, firstname";
 
 $rs = $DB->get_recordset_sql($sql);
-$names = array();
+$devs = array();
+$max = 1;
 foreach ($rs as $record) {
     if ($record->firstname === 'Moodle HQ git') {
         continue;
     }
+    $dev = new stdClass();
     if (is_null($record->userid)) {
-        $names[] = fullname($record);
+        $dev->name = s(fullname($record));
     } else {
-        $names[] = html_writer::link(new moodle_url('/user/profile.php', array('id' => $record->userid)), fullname($record));
+        $dev->name = html_writer::link(new moodle_url('/user/profile.php', array('id' => $record->userid)), s(fullname($record)));
     }
+    $dev->commits = $record->gitcommits + $record->gitmerges;
+    $max = $dev->commits > $max ? $dev->commits : $max;
+    $devs[] = $dev;
 }
 $rs->close();
 
 echo $output->header();
 echo $output->heading(get_string('developers', 'local_dev'));
-echo $output->box(
-    html_writer::tag('p', get_string('developersinfo', 'local_dev')).
-    html_writer::tag('div', implode(', ', $names))
-);
+echo $output->box_start();
+echo html_writer::tag('p', get_string('developersinfo', 'local_dev'));
+echo html_writer::start_tag('div', array('class' => 'devscloud'));
+foreach ($devs as $dev) {
+    $rel = round($dev->commits / $max * 100);
+    echo html_writer::tag('span', ' '.$dev->name.' ', array('style' => 'font-size:'.min(300, max(90, $rel*50)).'%'));
+}
+echo html_writer::end_tag('div');
+echo $output->box_end();
 echo $output->footer();
