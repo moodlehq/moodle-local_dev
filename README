@@ -1,3 +1,12 @@
+Pre-installation
+================
+
+RewriteEngine On
+RewriteBase /path/to/dirroot
+RewriteRule ^dev$ local/dev/index.php
+RewriteRule ^dev/(.*)$ local/dev/$1
+
+
 Installation
 ============
 

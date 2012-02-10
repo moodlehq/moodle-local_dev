@@ -1,51 +1,51 @@
-#page-local-dev-index .devscloud {
+.path-local-dev .devscloud {
     border: 1px solid #efefef;
     background-color: white;
     padding: 1em;
 }
 
-#page-local-dev-contributions .box.versionselector,
-#page-local-dev-gitcommits .box.backbutton {
+.path-local-dev .box.versionselector,
+.path-local-dev .box.backbutton {
     width: 60%;
     text-align: center;
     margin-left: auto;
     margin-right: auto;
 }
 
-#page-local-dev-contributions .box.versionselector label {
+.path-local-dev .box.versionselector label {
     margin-left: 1ex;
     margin-right: 1ex;
 }
 
-#page-local-dev-contributions .initialbar a {
+.path-local-dev .initialbar a {
     margin-left: 0.3em;
 }
 
-#page-local-dev-contributions table.flexible {
+.path-local-dev table.flexible {
     margin-left: auto;
     margin-right: auto;
 }
 
-#page-local-dev-contributions table.flexible td {
+.path-local-dev table.flexible td {
     text-align: center;
 }
 
-#page-local-dev-contributions table.flexible td.c1,
-#page-local-dev-contributions table.flexible td.c2,
-#page-local-dev-contributions table.flexible td.c3,
-#page-local-dev-contributions table.flexible td.c4 {
+.path-local-dev table.flexible td.c1,
+.path-local-dev table.flexible td.c2,
+.path-local-dev table.flexible td.c3,
+.path-local-dev table.flexible td.c4 {
     text-align: left;
 }
 
-#page-local-dev-contributions table.flexible td.c0 {
+.path-local-dev table.flexible td.c0 {
     padding: 3px;
 }
 
-#page-local-dev-contributions table.flexible tr:hover td {
+.path-local-dev table.flexible tr:hover td {
     background-color: #efefef;
 }
 
-#page-local-dev-gitcommits pre.gitcommit {
+.path-local-dev pre.gitcommit {
     width: 80%;
     margin: 0.2em auto;
     background-color: white;

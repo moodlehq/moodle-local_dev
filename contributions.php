@@ -37,7 +37,8 @@ if (!is_null($version)) {
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('standard');
-$PAGE->set_url('/local/dev/contributions.php');
+$PAGE->set_url(new local_dev_url('/local/dev/contributions.php'));
+$PAGE->add_body_class('path-local-dev');
 $PAGE->set_title(get_string('pluginname', 'local_dev'));
 $PAGE->set_heading(get_string('pluginname', 'local_dev'));
 

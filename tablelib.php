@@ -97,7 +97,7 @@ class dev_activity_table_sql extends table_sql {
 
         } else {
             if (empty($data->realuserid)) {
-                return html_writer::link(new moodle_url('/local/dev/gitcommits.php', array(
+                return html_writer::link(new local_dev_url('/local/dev/gitcommits.php', array(
                     'version' => $data->version,
                     'lastname' => $data->lastname,
                     'firstname' => $data->firstname,
@@ -106,7 +106,7 @@ class dev_activity_table_sql extends table_sql {
                 )), $data->gitcommits);
 
             } else {
-                return html_writer::link(new moodle_url('/local/dev/gitcommits.php', array(
+                return html_writer::link(new local_dev_url('/local/dev/gitcommits.php', array(
                     'version' => $data->version,
                     'userid' => $data->realuserid,
                     'merges' => 0,
@@ -126,7 +126,7 @@ class dev_activity_table_sql extends table_sql {
 
         } else {
             if (empty($data->realuserid)) {
-                return html_writer::link(new moodle_url('/local/dev/gitcommits.php', array(
+                return html_writer::link(new local_dev_url('/local/dev/gitcommits.php', array(
                     'version' => $data->version,
                     'lastname' => $data->lastname,
                     'firstname' => $data->firstname,
@@ -135,7 +135,7 @@ class dev_activity_table_sql extends table_sql {
                 )), $data->gitmerges);
 
             } else {
-                return html_writer::link(new moodle_url('/local/dev/gitcommits.php', array(
+                return html_writer::link(new local_dev_url('/local/dev/gitcommits.php', array(
                     'version' => $data->version,
                     'userid' => $data->realuserid,
                     'merges' => 1,

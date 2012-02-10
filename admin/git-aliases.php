@@ -32,7 +32,8 @@ require_capability('local/dev:manage', context_system::instance());
 $action = optional_param('action', null, PARAM_ALPHA);
 
 $PAGE->set_pagelayout('standard');
-$PAGE->set_url('/local/dev/admin/git-aliases.php');
+$PAGE->set_url(new local_dev_url('/local/dev/admin/git-aliases.php'));
+$PAGE->add_body_class('path-local-dev');
 $PAGE->set_title(get_string('gitaliases', 'local_dev'));
 $PAGE->set_heading(get_string('gitaliases', 'local_dev'));
 $PAGE->requires->yui_module('moodle-local_dev-gitaliases', 'M.local_dev.init_gitaliases');

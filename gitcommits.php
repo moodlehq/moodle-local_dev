@@ -45,10 +45,11 @@ $merges = required_param('merges', PARAM_BOOL);
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('standard');
-$PAGE->set_url('/local/dev/gitcommits.php');
+$PAGE->set_url(new local_dev_url('/local/dev/gitcommits.php'));
+$PAGE->add_body_class('path-local-dev');
 $PAGE->set_title(get_string('pluginname', 'local_dev'));
 $PAGE->set_heading(get_string('pluginname', 'local_dev'));
-navigation_node::override_active_url(new moodle_url('/local/dev/contributions.php'));
+navigation_node::override_active_url(new local_dev_url('/local/dev/contributions.php'));
 
 $output = $PAGE->get_renderer('local_dev');
 
@@ -97,7 +98,7 @@ foreach ($rs as $commit) {
             echo $output->heading(s(get_string('gitcommitsby', 'local_dev', $a)));
         }
         echo $output->box(
-            $output->single_button(new moodle_url('contributions.php', array('version' => $version)), get_string('back'), 'get'),
+            $output->single_button(new local_dev_url('/local/dev/contributions.php', array('version' => $version)), get_string('back'), 'get'),
             array('generalbox backbutton'));
         unset($a);
         $headprinted = true;
