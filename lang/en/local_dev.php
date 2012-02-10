@@ -24,6 +24,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['adminoverview'] = 'Overview';
+$string['allversions'] = '{$a} (all)';
 $string['contributions'] = 'Contributions';
 $string['contributionsheading'] = 'Contributions to Moodle {$a}';
 $string['dev:manage'] = 'Manage the Developers plugin';
@@ -37,4 +38,5 @@ $string['gitaliasesemail'] = 'Email';
 $string['gitaliasesfullname'] = 'Name';
 $string['gitcommits'] = 'Git commits';
 $string['gitmerges'] = 'Git merges';
+$string['invalidversion'] = 'Version {$a} is not valid, choose the version from the menu';
 $string['pluginname'] = 'Developer credits';

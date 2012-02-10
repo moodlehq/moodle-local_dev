@@ -123,6 +123,13 @@ class dev_aggregator {
      */
     public static function get_branches() {
         global $DB;
+        static $welcomeback = false;
+
+        if ($welcomeback) {
+            debugging('get_branches() called more than once during the request', DEBUG_DEVELOPER);
+        } else {
+            $welcomeback = true;
+        }
 
         // get all know versions in the dev_activity table
         $knownversions = $DB->get_records_select("dev_activity", $DB->sql_like("version", "?", false, false, true),

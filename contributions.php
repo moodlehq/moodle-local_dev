@@ -43,49 +43,41 @@ $PAGE->set_heading(get_string('pluginname', 'local_dev'));
 
 $output = $PAGE->get_renderer('local_dev');
 
-// prepare the list of known versions
-
-$knownversions = $DB->get_records("dev_activity", array(), '', "DISTINCT version");
-$versions = array();
-foreach (array_keys($knownversions) as $knownversion) {
-    $bits = explode('.', $knownversion, 3);
-    $versions[$bits[0]*1e9 + $bits[1]*1e6 + 1e3] = $bits[0].'.'.$bits[1].'.x';
-    $versions[$bits[0]*1e9 + $bits[1]*1e6 + $bits[2]] = $knownversion;
-}
-unset($knownversions);
-krsort($versions);
-$versions = array_flip($versions);
-foreach (array_keys($versions) as $v) {
-    $versions[$v] = $v;
-}
-
-if (!isset($versions[$version])) {
-    $keys = array_keys($versions);
-    $version = $versions[$keys[1]];
+// prepare the drop down box with versions
+$options = array();
+$validversion = is_null($version);
+$branches = dev_aggregator::get_branches();
+foreach ($branches as $branch => $vers) {
+    if ($version === $branch) {
+        $validversion = true;
+    }
+    $optgroup = array($branch => get_string('allversions', 'local_dev', $branch));
+    foreach ($vers as $ver) {
+        $optgroup[$ver] = $ver;
+        if ($version === $ver) {
+            $validversion = true;
+        }
+    }
+    $options[] = array(('Moodle '.$branch) => $optgroup);
 }
 
 echo $output->header();
-echo $output->box($output->single_select($PAGE->url, 'version', $versions, $version), array('generalbox versionselector'));
 
-if (is_null($version)) {
-    echo $output->footer();
-    die();
+if (!$validversion) {
+    // the version has the correct format but is not known, for example 1.8.99
+    echo $output->heading(get_string('invalidversion', 'local_dev', $version));
 }
 
-// populate list of versions to display contributions for
-$bits = explode('.', $version, 3);
-$display = array();
-if ($bits[2] === 'x') {
-    foreach ($versions as $v) {
-        if (substr($v, -1) === 'x') {
-            continue;
-        }
-        if (strpos($v, $bits[0].'.'.$bits[1].'.') === 0) {
-            $display[] = $v;
-        }
-    }
-} else {
-    $display[] = $version;
+if (is_null($version)) {
+    // version not specified or has invalid format - choose the most recent version by default
+    $version = reset(reset($branches));
+}
+
+echo $output->box($output->single_select($PAGE->url, 'version', $options, $version), array('generalbox versionselector'));
+
+if (!$validversion) {
+    echo $output->footer();
+    die();
 }
 
 echo $output->heading(get_string('contributionsheading', 'local_dev', $version));
@@ -104,8 +96,8 @@ foreach ($metrics as $metric) {
     $sqlwheremetrics[] = "$metric IS NOT NULL";
 }
 $sqlwhere  = "(" . implode(" OR ", $sqlwheremetrics) . ")";
-list($subsql, $sqlparams) = $DB->get_in_or_equal($display);
-$sqlwhere .= " AND version $subsql";
+$sqlwhere .= " AND version = ?";
+$sqlparams = array($version);
 $table->set_sql($sqlfields, $sqlfrom, $sqlwhere, $sqlparams);
 $table->set_count_sql("SELECT COUNT(*) FROM {dev_activity} a WHERE $sqlwhere", $sqlparams);
 
@@ -129,9 +121,6 @@ $headers[] = get_string('country');
 $columns[] = 'realuserinstitution';
 $headers[] = get_string('institution');
 
-$columns[] = 'version';
-$headers[] = get_string('version');
-
 $columns[] = 'gitcommits';
 $headers[] = get_string('gitcommits', 'local_dev');
 
@@ -140,8 +129,6 @@ $headers[] = get_string('gitmerges', 'local_dev');
 
 $table->define_columns($columns);
 $table->define_headers($headers);
-$table->column_suppress('userpic');
-$table->column_suppress('fullname');
 $table->sortable(true, 'commits', SORT_DESC);
 $table->define_baseurl(new moodle_url($PAGE->url, array('version' => $version)));
 $table->out(100, true, true);
