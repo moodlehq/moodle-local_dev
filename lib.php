@@ -50,6 +50,12 @@ class local_dev_url extends moodle_url {
  * @category navigation
  */
 function dev_extends_navigation(global_navigation $navigation) {
+    global $CFG;
+
+    if (!empty($CFG->hidelocaldevfromnavigation)) {
+        return;
+    }
+
     $icon = new pix_icon('icon', get_string('pluginname', 'local_dev'), 'local_dev');
     $devnode = $navigation->add(get_string('pluginname', 'local_dev'), null, navigation_node::TYPE_CUSTOM, null, null, $icon);
     $devnode->add(get_string('developers', 'local_dev'), new local_dev_url('/local/dev/index.php'), navigation_node::TYPE_CUSTOM, null, null, $icon);
