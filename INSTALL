@@ -1,0 +1,95 @@
+# DEPLOYING THE DEVELOPER CREDITS PLUGIN AT MOODLE.ORG SITE #
+
+Installation
+============
+
+Put the following line into config.php:
+
+    $CFG->hidelocaldevfromnavigation = true;
+
+Fetch the source code of the plugin:
+
+    # cd /var/www/vhosts/moodle.org/html/local
+    # git clone git://github.com/moodlehq/moodle-local_dev.git dev
+
+Visit the /admin page to install the plugin as usually.
+
+Add the following two lines to .htaccess to support nice top level URL:
+
+    # local_dev
+        RewriteRule ^dev($|(/(.*))) local/dev/$3 [L]
+
+Post-installation setup via CLI
+===============================
+
+Prepare a mirror of the vanilla moodle.git repository in the server moodledata:
+
+    # cd /var/www/vhosts/moodle.org/data
+    # mkdir -p local_dev/repos
+    # chown -R apache:apache local_dev
+    # cd local_dev/repos
+    # nice git clone --mirror git://git.moodle.org/moodle.git
+    # chown -R apache:apache moodle.git
+
+Run cli/git-commits.php to register commits history in the database:
+
+    # cd /var/www/vhosts/moodle.org/html/local/dev/cli
+    # nice sudo -u apache /usr/bin/php git-commits.php --show-progress
+
+Import the initial pre-computed tags mapping:
+
+    # cd /var/www/vhosts/moodle.org/html/local/dev/cli
+    # nice sudo -u apache /usr/bin/php git-tags.php --import=../init/tags.txt --show-progress
+
+Import the initial pre-computed legacy CVS mappings:
+
+    # cd /var/www/vhosts/moodle.org/html/local/dev/cli
+    # nice sudo -u apache /usr/bin/php git-aliases.php --import=../init/legacyusers.txt
+
+Run cli/aggregate.php to generate initial reports for display
+
+    # cd /var/www/vhosts/moodle.org/html/local/dev/cli
+    # nice sudo -u apache /usr/bin/php aggregate.php
+
+Post-installation setup via WWW
+===============================
+
+Go to Site administration ► Users ► Permissions ► Define roles and define new role:
+
+    Role name:      Developers plugin manager
+    Short name:     localdevmanager
+    Description:    Can manage the local_dev plugin
+    Role archetype: None
+    Context types:  System
+
+    Allow:          Manage the Developers plugin (local/dev:manage)
+
+Go to Site administration ► Users ► Permissions ► Assign system roles and assign
+the new role to the user with email "david@moodle.com" (userid 1601)
+
+Tell David to continue with the setup (he will have to map Git users to existing Moodle users).
+
+Scheduling regular tasks to be executed
+=======================================
+
+Let the aggregate script run every hour or so to update the data that are displayed at the
+web pages of the plugin:
+
+    37 * * * * apache /usr/bin/php aggregate.php
+
+To process new Git commits in moodle.git, the following sequence of scripts should be
+executed (you may want to prepare a separate shell script for that). They should be executed as
+soon as possible after the moodle.git repository update (that is after every weekly build).
+As there can be some emergency releases or irregular weekly update, it makes sense to run
+these scripts once per day (the execution is pretty cheap):
+
+    07 00 * * * apache /usr/bin/php git-commits.php > /some/log/file
+
+Making the plugin visible to the world
+======================================
+
+The data will be available at http://moodle.org/dev and http://moodle.org/dev/contributions.php and
+everybody who knows these URLs will be able to review and test it. Once we are happy with it, just
+remove the hidelocaldevfromnavigation flag from config.php or set it to false.
+
+Done!
