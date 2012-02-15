@@ -22,6 +22,7 @@
  */
 
 require(dirname(dirname(dirname(__FILE__))).'/config.php');
+require_once($CFG->dirroot.'/local/dev/lib.php');
 require_once($CFG->dirroot.'/local/dev/locallib.php');
 require_once($CFG->dirroot.'/local/dev/tablelib.php');
 
