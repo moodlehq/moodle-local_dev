@@ -290,7 +290,7 @@ userid	CVS	tracker
 907956	trankennykhang	trankennykhang
 866514	karpulse	pulse
 909969	aschechter88	aschechter88
-9183	pj	pj
+9183	defacer	pj
 913468	kgeorga	kgeorga
 807505	nthompson	nthompson
 912973	rajeshuser	rajeshuser
@@ -460,3 +460,4 @@ userid	CVS	tracker
 476377	abdo2008	abdo2008
 1394834	ebondrow	ebondrow
 1379353	phalacee	phalacee
+86470	vyshane	vyshane
