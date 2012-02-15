@@ -133,7 +133,7 @@ $headers[] = get_string('gitmerges', 'local_dev');
 
 $table->define_columns($columns);
 $table->define_headers($headers);
-$table->sortable(true, 'commits', SORT_DESC);
+$table->sortable(true, 'gitcommits', SORT_DESC);
 $table->define_baseurl(new moodle_url($PAGE->url, array('version' => $version)));
 $table->out(100, true, true);
 
