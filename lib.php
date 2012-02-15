@@ -26,6 +26,24 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
+ * Custom URL handling class that supports the plugin appearing outside its real location
+ */
+class local_dev_url extends moodle_url {
+
+    /**
+     * Given the real location if the script like '/local/dev/file.php' this method
+     * actually creates URL to '/dev/file.php'
+     */
+    public function __construct($url, array $params = null) {
+
+        if (is_string($url) and preg_match("~^/local/dev(/?)(.*)$~", $url, $matches)) {
+            $url = '/dev/'.$matches[2];
+        }
+        parent::__construct($url, $params);
+    }
+}
+
+/**
  * Puts AMOS into the global navigation tree.
  *
  * @param global_navigation $navigation the navigation tree instance
