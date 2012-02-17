@@ -65,6 +65,8 @@ class dev_aggregator {
         }
         // and aggregate all them all by branch
         $this->aggregate_versions();
+        // and finally aggregate branches into totals
+        $this->aggregate_totals();
     }
 
     /**
@@ -123,13 +125,12 @@ class dev_aggregator {
      */
     public static function get_branches() {
         global $DB;
-        static $welcomeback = false;
+        static $welcomeback = 0;
 
-        if ($welcomeback) {
-            debugging('get_branches() called more than once during the request', DEBUG_DEVELOPER);
-        } else {
-            $welcomeback = true;
+        if ($welcomeback > 1) {
+            debugging('get_branches() called more than once ('.$welcomeback.') during the request', DEBUG_DEVELOPER);
         }
+        $welcomeback++;
 
         // get all know versions in the dev_activity table
         $knownversions = $DB->get_records_select("dev_activity", $DB->sql_like("version", "?", false, false, true),
@@ -143,6 +144,10 @@ class dev_aggregator {
         $versions = array();
         foreach (array_keys($knownversions) as $knownversion) {
             $bits = explode('.', $knownversion, 3);
+            if (count($bits) != 3) {
+                // not a valid version number
+                continue;
+            }
             $versions[$bits[0]*1e9 + $bits[1]*1e6 + $bits[2]*1e3] = $knownversion;
         }
         unset($knownversions);
@@ -201,6 +206,48 @@ class dev_aggregator {
                 }
                 $rs->close();
             }
+        }
+    }
+
+    /**
+     * Aggregates total activity metrics for all the Moodle project history
+     *
+     * This implementation relies on {@link self::aggregate_versions()} being executed
+     * first as it uses its results. The totals are saved as contributions to a special
+     * 'x.x.x' version (the trailing '.x' is important as {@link self::get_branches()}
+     * checks against it.
+     */
+    protected function aggregate_totals() {
+        global $DB;
+
+        $branches = array_keys(self::get_branches());
+
+        if (empty($branches)) {
+            debugging('No branches found');
+            return;
+        }
+
+        foreach ($this->sources as $name => $aggregator) {
+            list($sqlbranches, $params) = $DB->get_in_or_equal($branches);
+            $sql = "SELECT userid, userlastname, userfirstname, useremail,
+                           SUM(".$aggregator->get_metric_column().") AS metric
+                      FROM {dev_activity}
+                     WHERE version $sqlbranches
+                  GROUP BY userid, userlastname, userfirstname, useremail";
+
+            $rs = $DB->get_recordset_sql($sql, $params);
+            foreach ($rs as $record) {
+                if (empty($record->userid)) {
+                    $user = new stdClass();
+                    $user->firstname = $record->userfirstname;
+                    $user->lastname  = $record->userlastname;
+                    $user->email     = $record->useremail;
+                } else {
+                    $user = $record->userid;
+                }
+                dev_aggregator::update_activity($user, 'x.x.x', $aggregator->get_metric_column(), $record->metric);
+            }
+            $rs->close();
         }
     }
 }

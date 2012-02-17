@@ -31,9 +31,11 @@ require_once($CFG->dirroot.'/local/dev/tablelib.php');
 //require_login(SITEID, false);
 
 $version = required_param('version', PARAM_RAW);
-$clean = preg_replace('/[^x0-9\.]/', '', $version);
-if ($version !== $clean) {
-    print_error('missingparameter');
+if ($version !== 'x.x.x') {
+    $clean = preg_replace('/[^x0-9\.]/', '', $version);
+    if ($version !== $clean) {
+        print_error('missingparameter');
+    }
 }
 
 $userid = optional_param('userid', null, PARAM_INT);
@@ -60,7 +62,7 @@ $sql = "SELECT c.*,
           FROM {dev_git_commits} c
      LEFT JOIN {user} u ON (c.userid = u.id)
          WHERE ".$DB->sql_like("c.tag", "?", false, false)." ";
-$params = array('v'.$DB->sql_like_escape(str_replace('x', '', $version)).'%');
+$params = array('v'.str_replace('*', '%', $DB->sql_like_escape(str_replace('x', '*', $version))));
 
 if (!empty($userid)) {
     $sql .= " AND c.userid = ? ";

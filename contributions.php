@@ -31,7 +31,9 @@ if (empty($version)) {
     $version = null;
 }
 if (!is_null($version)) {
-    $clean = preg_replace('/[^x0-9\.]/', '', $version);
+    if ($version !== 'x.x.x') {
+        $version = preg_replace('/[^x0-9\.]/', '', $version);
+    }
 }
 
 //require_login(SITEID, false);
@@ -46,14 +48,16 @@ $PAGE->set_heading(get_string('pluginname', 'local_dev'));
 $output = $PAGE->get_renderer('local_dev');
 
 // prepare the drop down box with versions
-$options = array();
+$options = array('x.x.x' => get_string('allversions', 'local_dev'));
 $validversion = is_null($version);
 $branches = dev_aggregator::get_branches();
 foreach ($branches as $branch => $vers) {
-    if ($version === $branch) {
+    if ($version === 'x.x.x') {
+        $validversion = true;
+    } else if ($version === $branch) {
         $validversion = true;
     }
-    $optgroup = array($branch => get_string('allversions', 'local_dev', $branch));
+    $optgroup = array($branch => get_string('allversionsonbranch', 'local_dev', $branch));
     foreach ($vers as $ver) {
         $optgroup[$ver] = $ver;
         if ($version === $ver) {
@@ -76,10 +80,14 @@ if (!$validversion) {
     echo $output->heading(get_string('contributionsversioninvalid', 'local_dev', $version));
 } else {
     if (is_null($version)) {
-        // version not specified or has invalid format - use the most recent version by the default
-        $version = reset(reset($branches));
+        // version not specified or has invalid format - use 'All versions'
+        $version = 'x.x.x';
     }
-    echo $output->heading(get_string('contributionsversion', 'local_dev', $version));
+    if ($version === 'x.x.x') {
+        echo $output->heading(get_string('contributionsversionall', 'local_dev'));
+    } else {
+        echo $output->heading(get_string('contributionsversion', 'local_dev', $version));
+    }
 }
 
 $select = new single_select($PAGE->url, 'version', $options, $version);
