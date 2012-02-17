@@ -122,10 +122,9 @@ foreach ($metrics as $metric) {
     $sqlwheremetrics[] = "$metric IS NOT NULL";
 }
 $sqlwhere  = "(" . implode(" OR ", $sqlwheremetrics) . ")";
-$sqlwhere .= " AND version = ?";
-$sqlparams = array($version);
+$sqlwhere .= " AND version = :version";
+$sqlparams = array('version' => $version);
 $table->set_sql($sqlfields, $sqlfrom, $sqlwhere, $sqlparams);
-$table->set_count_sql("SELECT COUNT(*) FROM {dev_activity} a WHERE $sqlwhere", $sqlparams);
 
 $columns = array();
 $headers = array();
@@ -157,6 +156,7 @@ $table->define_columns($columns);
 $table->define_headers($headers);
 $table->sortable(true, 'gitcommits', SORT_DESC);
 $table->define_baseurl(new moodle_url($PAGE->url, array('version' => $version)));
+$table->initialbars(true);
 $table->out(100, true, true);
 
 echo $output->footer();
