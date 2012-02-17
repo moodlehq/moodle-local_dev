@@ -57,9 +57,9 @@ function dev_extends_navigation(global_navigation $navigation) {
     }
 
     $icon = new pix_icon('icon', get_string('pluginname', 'local_dev'), 'local_dev');
-    $devnode = $navigation->add(get_string('pluginname', 'local_dev'), null, navigation_node::TYPE_CUSTOM, null, null, $icon);
-    $devnode->add(get_string('developers', 'local_dev'), new local_dev_url('/local/dev/index.php'), navigation_node::TYPE_CUSTOM, null, null, $icon);
-    $devnode->add(get_string('contributions', 'local_dev'), new local_dev_url('/local/dev/contributions.php'));
+    $devnode = $navigation->add(get_string('pluginname', 'local_dev'), null, navigation_node::TYPE_CUSTOM, null, 'local_dev-root', $icon);
+    $devnode->add(get_string('developers', 'local_dev'), new local_dev_url('/local/dev/index.php'), navigation_node::TYPE_CUSTOM, null, 'local_dev-developers', $icon);
+    $devnode->add(get_string('contributions', 'local_dev'), new local_dev_url('/local/dev/contributions.php'), navigation_node::TYPE_CUSTOM, null, 'local_dev-contributions');
     if (has_capability('local/dev:manage', context_system::instance())) {
         $admin = $devnode->add(get_string('administration'));
         $admin->add(get_string('adminoverview', 'local_dev'), new local_dev_url('/local/dev/admin/index.php'));

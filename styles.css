@@ -4,8 +4,7 @@
     padding: 1em;
 }
 
-.path-local-dev .box.versionselector,
-.path-local-dev .box.backbutton {
+.path-local-dev .box.versionselector {
     width: 60%;
     text-align: center;
     margin-left: auto;

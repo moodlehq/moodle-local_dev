@@ -37,22 +37,29 @@ if ($version !== 'x.x.x') {
         print_error('missingparameter');
     }
 }
+$pageparams['version'] = $version;
 
 $userid = optional_param('userid', null, PARAM_INT);
 if (empty($userid)) {
     $lastname = required_param('lastname', PARAM_RAW);
     $firstname = required_param('firstname', PARAM_RAW);
     $email = required_param('email', PARAM_RAW);
+    $pageparams = array_merge($pageparams, compact('lastname', 'firstname', 'email'));
+} else {
+    $pageparams['userid'] = $userid;
 }
-$merges = required_param('merges', PARAM_BOOL);
+$merges = $pageparams['merges'] = required_param('merges', PARAM_BOOL);
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('standard');
-$PAGE->set_url(new local_dev_url('/local/dev/gitcommits.php'));
+$PAGE->set_url(new local_dev_url('/local/dev/gitcommits.php'), $pageparams);
 $PAGE->add_body_class('path-local-dev');
 $PAGE->set_title(get_string('pluginname', 'local_dev'));
 $PAGE->set_heading(get_string('pluginname', 'local_dev'));
-navigation_node::override_active_url(new local_dev_url('/local/dev/contributions.php'));
+$contribnode = $PAGE->navigation->find('local_dev-contributions', navigation_node::TYPE_CUSTOM);
+$contribnode->action = new local_dev_url('/local/dev/contributions.php', array('version' => $version));
+$thisnode = $contribnode->add(get_string('contributionsdetails', 'local_dev'), $PAGE->url);
+$thisnode->make_active();
 
 $output = $PAGE->get_renderer('local_dev');
 
@@ -100,9 +107,6 @@ foreach ($rs as $commit) {
         } else {
             echo $output->heading(s(get_string('gitcommitsby', 'local_dev', $a)));
         }
-        echo $output->box(
-            $output->single_button(new local_dev_url('/local/dev/contributions.php', array('version' => $version)), get_string('back'), 'get'),
-            array('generalbox backbutton'));
         unset($a);
         $headprinted = true;
     }

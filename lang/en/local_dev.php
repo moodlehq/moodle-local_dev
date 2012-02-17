@@ -27,6 +27,7 @@ $string['adminoverview'] = 'Overview';
 $string['allversions'] = 'All versions';
 $string['allversionsonbranch'] = '{$a} (all)';
 $string['contributions'] = 'Contributions';
+$string['contributionsdetails'] = 'Details';
 $string['contributionsversion'] = 'Contributions to Moodle v{$a}';
 $string['contributionsversionall'] = 'Contributions to Moodle';
 $string['contributionsversioninvalid'] = 'Version {$a} is not valid, please choose the version from the menu';
