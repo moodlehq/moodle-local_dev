@@ -65,6 +65,12 @@ foreach ($branches as $branch => $vers) {
 
 echo $output->header();
 
+if (empty($branches)) {
+    echo $output->box('Unable to find any branch, are you sure you have executed cli/aggregate.php?');
+    echo $output->footer();
+    die();
+}
+
 if (!$validversion) {
     // the version has the correct format but is not known, for example 1.8.99
     echo $output->heading(get_string('contributionsversioninvalid', 'local_dev', $version));
