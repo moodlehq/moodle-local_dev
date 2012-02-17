@@ -50,6 +50,7 @@
     background-color: white;
     border: 1px solid #efefef;
     padding: 0.5em;
+    white-space: pre-wrap;
 }
 
 .path-local-dev .generalbox {

@@ -46,10 +46,11 @@ class local_dev_renderer extends plugin_renderer_base {
         $text = sprintf(s("commit %s
 Author: %s <%s>
 Date:   %s
+Tag:    %s
 
-    %s
+%s
 
-"), $hash, $author, s($commit->email), s(date('r', $commit->authordate)), format_string(s($commit->subject)));
+"), $hash, $author, s($commit->email), s(date('r', $commit->authordate)), s($commit->tag), format_text(s($commit->subject), FORMAT_HTML, array('para' => false)));
         return html_writer::tag('pre', $text, array('class' => 'gitcommit'));
     }
 }

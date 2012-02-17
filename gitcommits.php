@@ -69,7 +69,7 @@ $sql = "SELECT c.*,
           FROM {dev_git_commits} c
      LEFT JOIN {user} u ON (c.userid = u.id)
          WHERE ".$DB->sql_like("c.tag", "?", false, false)." ";
-$params = array('v'.str_replace('*', '%', $DB->sql_like_escape(str_replace('x', '*', $version))));
+$params = array('v'.str_replace('*', '%', $DB->sql_like_escape(str_replace('x', '*', $version))).'%');
 
 if (!empty($userid)) {
     $sql .= " AND c.userid = ? ";
