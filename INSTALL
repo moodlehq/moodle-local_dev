@@ -83,7 +83,7 @@ soon as possible after the moodle.git repository update (that is after every wee
 As there can be some emergency releases or irregular weekly update, it makes sense to run
 these scripts once per day (the execution is pretty cheap):
 
-    07 00 * * * apache /usr/bin/php git-commits.php > /some/log/file
+    07 00 * * * apache /usr/bin/php git-commits.php > /some/log/file ; /usr/bin/php git-aliases.php ; /usr/bin/php git-tags.php
 
 Making the plugin visible to the world
 ======================================
