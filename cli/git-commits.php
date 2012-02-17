@@ -61,10 +61,29 @@ if ($options['reset-startpoints'] or empty($config->gitstartpoints)) {
 
 $repo->git('remote update');
 
+$gitbranches = array();
+$recentstable = 0;
 foreach ($repo->getBranches() as $gitbranch) {
     if ($gitbranch === 'master') {
-        // todo some sort of auto-mapping here
-        $branch = 'MOODLE_23_STABLE';
+        $gitbranches[] = $gitbranch;
+        continue;
+    }
+    if (preg_match('~^MOODLE_([0-9]+)_STABLE$~', $gitbranch, $matches)) {
+        $gitbranches[] = $gitbranch;
+        if ($matches[1] > $recentstable) {
+            $recentstable = $matches[1];
+        }
+        continue;
+    }
+}
+
+if ($recentstable < 22) {
+    throw new coding_exception('Something is wrong with the tracked repository, MOODLE_22_STABLE branch not found');
+}
+
+foreach ($repo->getBranches() as $gitbranch) {
+    if ($gitbranch === 'master') {
+        $branch = sprintf('MOODLE_%d_STABLE', $recentstable + 1);
     } else {
         $branch = $gitbranch;
     }
