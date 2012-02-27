@@ -16,6 +16,11 @@
     margin-right: 1ex;
 }
 
+.path-local-dev .initialbar,
+.path-local-dev .paging {
+    text-align: center;
+}
+
 .path-local-dev .initialbar a,
 .path-local-dev .initialbar strong {
     margin-left: 0.3em;
