@@ -56,10 +56,12 @@ $PAGE->set_url(new local_dev_url('/local/dev/gitcommits.php'), $pageparams);
 $PAGE->add_body_class('path-local-dev');
 $PAGE->set_title(get_string('pluginname', 'local_dev'));
 $PAGE->set_heading(get_string('pluginname', 'local_dev'));
-$contribnode = $PAGE->navigation->find('local_dev-contributions', navigation_node::TYPE_CUSTOM);
-$contribnode->action = new local_dev_url('/local/dev/contributions.php', array('version' => $version));
-$thisnode = $contribnode->add(get_string('contributionsdetails', 'local_dev'), $PAGE->url);
-$thisnode->make_active();
+if (empty($CFG->hidelocaldevfromnavigation)) {
+    $contribnode = $PAGE->navigation->find('local_dev-contributions', navigation_node::TYPE_CUSTOM);
+    $contribnode->action = new local_dev_url('/local/dev/contributions.php', array('version' => $version));
+    $thisnode = $contribnode->add(get_string('contributionsdetails', 'local_dev'), $PAGE->url);
+    $thisnode->make_active();
+}
 
 $output = $PAGE->get_renderer('local_dev');
 

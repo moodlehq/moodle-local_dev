@@ -50,8 +50,10 @@ $PAGE->set_url(new local_dev_url('/local/dev/contributions.php', $pageparams));
 $PAGE->add_body_class('path-local-dev');
 $PAGE->set_title(get_string('pluginname', 'local_dev'));
 $PAGE->set_heading(get_string('pluginname', 'local_dev'));
-$thisnode = $PAGE->navigation->find('local_dev-contributions', navigation_node::TYPE_CUSTOM);
-$thisnode->action = $PAGE->url;
+if (empty($CFG->hidelocaldevfromnavigation)) {
+    $thisnode = $PAGE->navigation->find('local_dev-contributions', navigation_node::TYPE_CUSTOM);
+    $thisnode->action = $PAGE->url;
+}
 
 $output = $PAGE->get_renderer('local_dev');
 
