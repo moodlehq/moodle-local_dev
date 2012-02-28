@@ -39,9 +39,9 @@ class local_dev_renderer extends plugin_renderer_base {
 
         $hash = html_writer::link($commit->urlcommit, s($commit->commithash));
         if (!empty($commit->urlauthor)) {
-            $author = html_writer::link($commit->urlauthor, s($commit->author));
+            $author = html_writer::link($commit->urlauthor, s($commit->authorname));
         } else {
-            $author = s($commit->author);
+            $author = s($commit->authorname);
         }
         $text = sprintf(s("commit %s
 Author: %s <%s>
@@ -50,7 +50,7 @@ Tag:    %s
 
 %s
 
-"), $hash, $author, s($commit->email), s(date('r', $commit->authordate)), s($commit->tag), format_text(s($commit->subject), FORMAT_HTML, array('para' => false)));
+"), $hash, $author, s($commit->authoremail), s(date('r', $commit->authordate)), s($commit->tag), format_text(s($commit->subject), FORMAT_HTML, array('para' => false)));
         return html_writer::tag('pre', $text, array('class' => 'gitcommit'));
     }
 }

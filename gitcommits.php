@@ -65,9 +65,7 @@ if (empty($CFG->hidelocaldevfromnavigation)) {
 
 $output = $PAGE->get_renderer('local_dev');
 
-$sql = "SELECT c.*,
-               COALESCE(".$DB->sql_concat("u.firstname", "' '", "u.lastname").", c.authorname) AS author,
-               COALESCE(u.email, c.authoremail) AS email
+$sql = "SELECT c.*
           FROM {dev_git_commits} c
      LEFT JOIN {user} u ON (c.userid = u.id)
          WHERE ".$DB->sql_like("c.tag", "?", false, false)." ";
@@ -101,8 +99,7 @@ foreach ($rs as $commit) {
     }
     if (!$headprinted) {
         $a = new stdClass();
-        $a->author = $commit->author;
-        $a->email = $commit->email;
+        $a->author = $commit->authorname;
         $a->version = $version;
         if ($merges) {
             echo $output->heading(s(get_string('gitmergesby', 'local_dev', $a)));
