@@ -65,6 +65,7 @@ if (empty($CFG->hidelocaldevfromnavigation)) {
 
 $output = $PAGE->get_renderer('local_dev');
 
+//the table here needs to have data separating authors from committers. Then the query needs to be changed to reflect data for the 'author' column.
 $sql = "SELECT c.*,
                COALESCE(".$DB->sql_concat("u.firstname", "' '", "u.lastname").", c.authorname) AS author,
                COALESCE(u.email, c.authoremail) AS email

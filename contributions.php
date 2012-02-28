@@ -110,7 +110,7 @@ if (!$validversion) {
     die();
 }
 
-$metrics = array('gitcommits', 'gitmerges');
+$metrics = array('gitauthors', 'gitcommits', 'gitmerges');
 $table = new dev_activity_table_sql('dev-activity-table');
 $sqlfields = "a.id, a.version,
     COALESCE(u.firstname, a.userfirstname) AS firstname,
@@ -148,6 +148,9 @@ $headers[] = get_string('country');
 $columns[] = 'realuserinstitution';
 $headers[] = get_string('institution');
 
+$columns[] = 'gitauthors';
+$headers[] = get_string('gitauthors', 'local_dev');
+
 $columns[] = 'gitcommits';
 $headers[] = get_string('gitcommits', 'local_dev');
 
@@ -156,7 +159,7 @@ $headers[] = get_string('gitmerges', 'local_dev');
 
 $table->define_columns($columns);
 $table->define_headers($headers);
-$table->sortable(true, 'gitcommits', SORT_DESC);
+$table->sortable(true, 'gitauthors', SORT_DESC);
 $table->define_baseurl(new moodle_url($PAGE->url, array('version' => $version)));
 $table->initialbars(true);
 $table->out(100, true, true);
