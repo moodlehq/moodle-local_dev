@@ -68,7 +68,7 @@ shuffle($devs);
 
 echo $output->header();
 echo $output->heading(get_string('developers', 'local_dev'));
-echo $output->box(get_string('developersinfo', 'local_dev'));
+echo $output->box(get_string('developersinfo', 'local_dev', 'contributions.php'));
 echo $output->box_start(array('devscloud'));
 foreach ($devs as $dev) {
     if ($dev->commits <= 1 or $max == 0) {

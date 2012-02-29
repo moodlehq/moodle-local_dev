@@ -34,7 +34,7 @@ $string['contributionsversioninvalid'] = 'Version {$a} is not valid, please choo
 $string['contributionsversionselect'] = 'Display report for Moodle version';
 $string['dev:manage'] = 'Manage the Developers plugin';
 $string['developers'] = 'Developers';
-$string['developersinfo'] = 'Many thanks goes to those who have ever contributed substantial and ongoing amounts of time to writing Moodle code and helping it grow. This is the list of people with some commits in the main Moodle repository.';
+$string['developersinfo'] = 'Many thanks to everyone who contributed to developing Moodle, whether it be coding, testing, writing documentation, coming up with ideas or even just helping other people in the forums. On this page is a list of developers who have contributed directly to core Moodle code. For more details see the <a href="{$a}">Contributions</a> pages.';
 $string['gitaliases'] = 'Git aliases';
 $string['gitaliasesassign'] = 'Assign user ID';
 $string['gitaliasescommits'] = 'Commits';
