@@ -36,24 +36,12 @@ if (!is_null($version)) {
     }
 }
 
-if (!empty($version)) {
-    $pageparams = array('version' => $version);
-} else {
-    $pageparams = array();
-}
-
-//require_login(SITEID, false);
-
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('standard');
-$PAGE->set_url(new local_dev_url('/local/dev/contributions.php', $pageparams));
+$PAGE->set_url(new local_dev_url('/local/dev/contributions.php', array('version' => $version)));
 $PAGE->add_body_class('path-local-dev');
 $PAGE->set_title(get_string('pluginname', 'local_dev'));
 $PAGE->set_heading(get_string('pluginname', 'local_dev'));
-if (empty($CFG->hidelocaldevfromnavigation)) {
-    $thisnode = $PAGE->navigation->find('local_dev-contributions', navigation_node::TYPE_CUSTOM);
-    $thisnode->action = $PAGE->url;
-}
 
 $output = $PAGE->get_renderer('local_dev');
 
@@ -75,6 +63,20 @@ foreach ($branches as $branch => $vers) {
         }
     }
     $options[] = array(('Moodle '.$branch) => $optgroup);
+}
+
+if (empty($CFG->hidelocaldevfromnavigation)) {
+    $rootnode = $PAGE->navigation->find('local_dev-contributions', navigation_node::TYPE_CUSTOM);
+    foreach ($options as $key => $val) {
+        if (is_array($val)) {
+            $vers = array_keys(reset($val));
+            $branch = array_shift($vers);
+            $branchnode = $rootnode->add($branch, new local_dev_url('/local/dev/contributions.php', array('version' => $branch)));
+            foreach ($vers as $ver) {
+                $branchnode->add($ver, new local_dev_url('/local/dev/contributions.php', array('version' => $ver)));
+            }
+        }
+    }
 }
 
 echo $output->header();
@@ -100,7 +102,7 @@ if (!$validversion) {
     }
 }
 
-$select = new single_select($PAGE->url, 'version', $options, $version);
+$select = new single_select(new local_dev_url('/local/dev/contributions.php'), 'version', $options, $version);
 $select->set_label(get_string('contributionsversionselect', 'local_dev'));
 
 echo $output->box($output->render($select), array('generalbox versionselector'));
@@ -157,7 +159,7 @@ $headers[] = get_string('gitmerges', 'local_dev');
 $table->define_columns($columns);
 $table->define_headers($headers);
 $table->sortable(true, 'gitcommits', SORT_DESC);
-$table->define_baseurl(new moodle_url($PAGE->url, array('version' => $version)));
+$table->define_baseurl($PAGE->url);
 $table->initialbars(true);
 $table->out(100, true, true);
 
