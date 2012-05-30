@@ -50,7 +50,7 @@ Tag:    %s
 
 %s
 
-"), $hash, $author, s($commit->authoremail), s(date('r', $commit->authordate)), s($commit->tag), format_text(s($commit->subject), FORMAT_HTML, array('para' => false)));
+"), $hash, $author, s($commit->authoremail), s(date('r', $commit->authordate)), s($commit->tag), format_text(s($commit->subject), FORMAT_HTML, array('para' => false, 'nocache' => true)));
         return html_writer::tag('pre', $text, array('class' => 'gitcommit'));
     }
 }
