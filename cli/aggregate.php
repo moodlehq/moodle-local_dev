@@ -42,7 +42,9 @@ if ($options['help']) {
     exit(0);
 }
 
+fputs(STDOUT, 'AGGREGATE JOB STARTED ON '.date('Y-m-d H:i', time()).PHP_EOL);
 $aggregator = new dev_aggregator();
 $aggregator->add_source('gitcommits');
 $aggregator->add_source('gitmerges');
 $aggregator->execute();
+fputs(STDOUT, 'AGGREGATE JOB FINISHED ON '.date('Y-m-d H:i', time()).PHP_EOL);
