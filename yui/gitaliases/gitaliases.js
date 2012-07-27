@@ -8,7 +8,7 @@ YUI.add('moodle-local_dev-gitaliases', function(Y) {
 
     var GITALIASES = function() {
         GITALIASES.superclass.constructor.apply(this, arguments);
-    }
+    };
 
     Y.extend(GITALIASES, Y.Base, {
 
