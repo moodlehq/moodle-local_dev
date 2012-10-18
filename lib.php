@@ -49,7 +49,7 @@ class local_dev_url extends moodle_url {
  * @param global_navigation $navigation the navigation tree instance
  * @category navigation
  */
-function dev_extends_navigation(global_navigation $navigation) {
+function local_dev_extends_navigation(global_navigation $navigation) {
     global $CFG;
 
     if (!empty($CFG->hidelocaldevfromnavigation)) {
