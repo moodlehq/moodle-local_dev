@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+define('LOCAL_DEV_LOCALLIB_LOADED', true);
+
 /**
  * Manages activity aggregation
  *

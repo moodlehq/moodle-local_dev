@@ -56,6 +56,10 @@ function local_dev_extends_navigation(global_navigation $navigation) {
         return;
     }
 
+    if (!defined('LOCAL_DEV_LOCALLIB_LOADED')) {
+        return;
+    }
+
     $icon = new pix_icon('icon', get_string('pluginname', 'local_dev'), 'local_dev');
     $devnode = $navigation->add(get_string('pluginname', 'local_dev'), null, navigation_node::TYPE_CUSTOM, null, 'local_dev-root', $icon);
     $devnode->add(get_string('developers', 'local_dev'), new local_dev_url('/local/dev/index.php'), navigation_node::TYPE_CUSTOM, null, 'local_dev-developers', $icon);
