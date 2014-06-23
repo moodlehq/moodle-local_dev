@@ -147,8 +147,8 @@ if (!$table->is_downloading()) {
 $columns[] = 'realusercountry';
 $headers[] = get_string('country');
 
-$columns[] = 'realuserinstitution';
-$headers[] = get_string('institution');
+//$columns[] = 'realuserinstitution'; // removed, see MDLSITE-3080
+//$headers[] = get_string('institution');
 
 $columns[] = 'gitcommits';
 $headers[] = get_string('gitcommits', 'local_dev');
