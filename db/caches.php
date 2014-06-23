@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,16 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The plugin version information
+ * Cache definitions.
  *
- * @package     local_dev
- * @copyright   2012 David Mudrak <david@moodle.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    report_overviewstats
+ * @copyright  2014 Aparup Banerjee
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_dev';
-$plugin->version   = 2014062300;
-$plugin->requires  = 2014050200; // 2.7rc1 (moodle.org-2.7-base)
-$plugin->maturity  = MATURITY_STABLE;
+$definitions = array(
+    'apuwasadev' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'ttl' => WEEKSECS,
+    )
+);

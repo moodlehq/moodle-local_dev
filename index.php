@@ -39,31 +39,40 @@ $PAGE->set_heading(get_string('pluginname', 'local_dev'));
 
 $output = $PAGE->get_renderer('local_dev');
 
-$sql = "SELECT c.userid,
-               COALESCE(".$DB->sql_concat("u.firstname", "' '", "u.lastname").", c.authorname) AS xname,
-               COALESCE(u.email, c.authorname) AS xemail,
-               COUNT(c.commithash) AS xcommits
-          FROM {dev_git_commits} c
-     LEFT JOIN {user} u ON (c.userid = u.id)
-      GROUP BY userid, xname, xemail";
-
-$rs = $DB->get_recordset_sql($sql, array('%.x'));
 $devs = array();
-$max = 1;
-foreach ($rs as $record) {
-    $dev = new stdClass();
-    $fullname = s(trim($record->xname));
-    $fullname = html_writer::tag('span', $fullname, array('class' => 'cx'.$record->xcommits));
-    if (is_null($record->userid)) {
-        $dev->name = $fullname;
-    } else {
-        $dev->name = html_writer::link(new moodle_url('/user/profile.php', array('id' => $record->userid)), $fullname);
+$cache = cache::make('local_dev', 'apuwasadev');
+$devs = $cache->get('devs');
+$max = $cache->get('devsmaxcommits');
+
+if ($devs == false || $max == false) {
+    $max = 1;
+    $sql = "SELECT c.userid,
+                   COALESCE(".$DB->sql_concat("u.firstname", "' '", "u.lastname").", c.authorname) AS xname,
+                   COALESCE(u.email, c.authorname) AS xemail,
+                   COUNT(c.commithash) AS xcommits
+              FROM {dev_git_commits} c
+         LEFT JOIN {user} u ON (c.userid = u.id)
+          GROUP BY userid, xname, xemail";
+
+    $rs = $DB->get_recordset_sql($sql, array('%.x'));
+    foreach ($rs as $record) {
+        $dev = new stdClass();
+        $fullname = s(trim($record->xname));
+        $fullname = html_writer::tag('span', $fullname, array('class' => 'cx' . $record->xcommits));
+        if (is_null($record->userid)) {
+            $dev->name = $fullname;
+        } else {
+            $dev->name = html_writer::link(new moodle_url('/user/profile.php', array('id' => $record->userid)), $fullname);
+        }
+        $dev->commits = $record->xcommits;
+        $max = $dev->commits > $max ? $dev->commits : $max;
+        $devs[] = $dev;
     }
-    $dev->commits = $record->xcommits;
-    $max = $dev->commits > $max ? $dev->commits : $max;
-    $devs[] = $dev;
+    $rs->close();
+    $cache->set('devs', $devs);
+    $cache->set('devsmaxcommits', $max);
 }
-$rs->close();
+
 shuffle($devs);
 
 echo $output->header();
