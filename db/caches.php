@@ -27,6 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 $definitions = array(
     'apuwasadev' => array(
         'mode' => cache_store::MODE_APPLICATION,
-        'ttl' => WEEKSECS,
+        'ttl' => 604800,
     )
 );
