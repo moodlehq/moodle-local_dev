@@ -65,7 +65,7 @@ if ($devs) {
     echo $output->box(get_string('developersinfo', 'local_dev', 'http://moodle.org/dev/contributions.php')); //just show link to contributions page
 }
 
-if ($gentime == false || ($gentime !== true and $gentime + 30 < time())) {
+if ($gentime == false || ($gentime !== true and $gentime + WEEKSECS < time())) {
     error_log('debug(MDLSITE-3080):regenerating local/dev/index.php cache. cache status: $devs '. gettype($devs). ' , $max '. gettype($max). ', $gentime '. $gentime );
     $cache->set('devsgentime', true); // set gentime to skip more requests triggering sql.
     $max = 1;
