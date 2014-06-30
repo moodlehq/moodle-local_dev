@@ -43,8 +43,31 @@ $devs = array();
 $cache = cache::make('local_dev', 'apuwasadev');
 $devs = $cache->get('devs');
 $max = $cache->get('devsmaxcommits');
+$gentime = $cache->get('devsgentime');
 
-if ($devs == false || $max == false) {
+echo $output->header();
+echo $output->heading(get_string('developers', 'local_dev'));
+if ($devs) {
+    shuffle($devs);
+    echo $output->box(get_string('developersinfo', 'local_dev', 'http://moodle.org/dev/contributions.php'));
+    echo $output->box_start(array('devscloud'));
+    foreach ($devs as $dev) {
+        if ($dev->commits <= 1 or $max == 0) {
+            $rel = 0;
+        } else {
+            $rel = round(log($dev->commits) / log($max) * 100);
+        }
+        $rel = 3 * max($rel, 25);
+        echo html_writer::tag('span', ' '.$dev->name.' ', array('style' => sprintf('font-size:%d%%', $rel)));
+    }
+    echo $output->box_end();
+} else {
+    echo $output->box(get_string('developersinfo', 'local_dev', 'http://moodle.org/dev/contributions.php')); //just show link to contributions page
+}
+
+if ($gentime == false || ($gentime !== true and $gentime + 30 < time())) {
+    error_log('debug(MDLSITE-3080):regenerating local/dev/index.php cache. cache status: $devs '. gettype($devs). ' , $max '. gettype($max). ', $gentime '. $gentime );
+    $cache->set('devsgentime', true); // set gentime to skip more requests triggering sql.
     $max = 1;
     $sql = "SELECT c.userid,
                    COALESCE(".$DB->sql_concat("u.firstname", "' '", "u.lastname").", c.authorname) AS xname,
@@ -71,22 +94,6 @@ if ($devs == false || $max == false) {
     $rs->close();
     $cache->set('devs', $devs);
     $cache->set('devsmaxcommits', $max);
+    $cache->set('devsgentime', time()); //set proper gen time.
 }
-
-shuffle($devs);
-
-echo $output->header();
-echo $output->heading(get_string('developers', 'local_dev'));
-echo $output->box(get_string('developersinfo', 'local_dev', 'http://moodle.org/dev/contributions.php'));
-echo $output->box_start(array('devscloud'));
-foreach ($devs as $dev) {
-    if ($dev->commits <= 1 or $max == 0) {
-        $rel = 0;
-    } else {
-        $rel = round(log($dev->commits) / log($max) * 100);
-    }
-    $rel = 3 * max($rel, 25);
-    echo html_writer::tag('span', ' '.$dev->name.' ', array('style' => sprintf('font-size:%d%%', $rel)));
-}
-echo $output->box_end();
 echo $output->footer();
