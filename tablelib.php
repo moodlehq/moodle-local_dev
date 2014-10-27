@@ -61,9 +61,16 @@ class dev_activity_table_sql extends table_sql {
     public function col_fullname($data) {
 
         if (is_null($data->realuserid)) {
+            // User is in the git history but does not have an account in this Moodle site.
             $user = new stdClass();
             $user->firstname = $data->firstname;
             $user->lastname = $data->lastname;
+
+            // Additional fields so fullname() doesn't display a developer debug message.
+            $user->firstnamephonetic = null;
+            $user->lastnamephonetic = null;
+            $user->middlename = null;
+            $user->alternatename = null;
 
         } else {
             $user = user_picture::unalias($data, null, "realuserid", "realuser");
