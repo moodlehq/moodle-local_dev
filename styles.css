@@ -1,6 +1,12 @@
 .path-local-dev .devscloud {
     background-color: white;
-    padding: 1em;
+    margin-top: 3em;
+    text-align: justify;
+    line-height: 25px;
+}
+
+.path-local-dev .devscloud > span {
+    vertical-align: middle;
 }
 
 .path-local-dev .box.versionselector label {
