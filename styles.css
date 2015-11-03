@@ -1,14 +1,13 @@
 .path-local-dev .devscloud {
-    border: 1px solid #efefef;
     background-color: white;
     padding: 1em;
 }
 
 .path-local-dev .box.versionselector {
-    width: 60%;
     text-align: center;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 1em;
 }
 
 .path-local-dev .box.versionselector label {
@@ -19,6 +18,10 @@
 .path-local-dev .initialbar,
 .path-local-dev .paging {
     text-align: center;
+}
+
+.path-local-dev .paging {
+    margin: 1em auto;
 }
 
 .path-local-dev .initialbar a,
@@ -51,7 +54,6 @@
 }
 
 .path-local-dev pre.gitcommit {
-    width: 80%;
     margin: 0.2em auto;
     background-color: white;
     border: 1px solid #efefef;
@@ -60,7 +62,6 @@
 }
 
 .path-local-dev .generalbox {
-    width: 80%;
     margin-left: auto;
     margin-right: auto;
     background-color: white;
