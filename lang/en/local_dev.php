@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['adminoverview'] = 'Overview';
 $string['allversions'] = 'All versions';
 $string['allversionsonbranch'] = '{$a} (all)';
+$string['cachedef_gitcommits'] = 'Git commits aggregations';
 $string['contributions'] = 'Contributions';
 $string['contributionsdetails'] = 'Details';
 $string['contributionsversion'] = 'Contributions to Moodle {$a}';

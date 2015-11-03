@@ -28,8 +28,6 @@ require_once($CFG->dirroot.'/local/dev/lib.php');
 require_once($CFG->dirroot.'/local/dev/locallib.php');
 require_once($CFG->dirroot.'/local/dev/tablelib.php');
 
-//require_login(SITEID, false);
-
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('standard');
 $PAGE->set_url(new local_dev_url('/local/dev/index.php'));
@@ -39,35 +37,20 @@ $PAGE->set_heading(get_string('pluginname', 'local_dev'));
 
 $output = $PAGE->get_renderer('local_dev');
 
-$devs = array();
-$cache = cache::make('local_dev', 'apuwasadev');
-$devs = $cache->get('devs');
-$max = $cache->get('devsmaxcommits');
-$gentime = $cache->get('devsgentime');
-
 echo $output->header();
 echo $output->heading(get_string('developers', 'local_dev'));
-if ($devs) {
-    shuffle($devs);
-    echo $output->box(get_string('developersinfo', 'local_dev', 'http://moodle.org/dev/contributions.php'));
-    echo $output->box_start(array('devscloud'));
-    foreach ($devs as $dev) {
-        if ($dev->commits <= 1 or $max == 0) {
-            $rel = 0;
-        } else {
-            $rel = round(log($dev->commits) / log($max) * 100);
-        }
-        $rel = 3 * max($rel, 25);
-        echo html_writer::tag('span', ' '.$dev->name.' ', array('style' => sprintf('font-size:%d%%', $rel)));
-    }
-    echo $output->box_end();
-} else {
-    echo $output->box(get_string('developersinfo', 'local_dev', 'http://moodle.org/dev/contributions.php')); //just show link to contributions page
-}
+echo $output->box(get_string('developersinfo', 'local_dev', 'contributions.php'));
 
-if ($gentime == false || ($gentime !== true and $gentime + WEEKSECS < time())) {
-    error_log('debug(MDLSITE-3080):regenerating local/dev/index.php cache. cache status: $devs '. gettype($devs). ' , $max '. gettype($max). ', $gentime '. $gentime );
-    $cache->set('devsgentime', true); // set gentime to skip more requests triggering sql.
+$devs = array();
+$cache = cache::make('local_dev', 'gitcommits');
+// List of developers from the {dev_git_commits} table.
+$devs = $cache->get('devs');
+// The maximum number of commits by a single developer (used for font-size
+// calculation in the names tag cloud).
+$max = $cache->get('maxcommits');
+
+
+if ($devs === false or $max === false) {
     $max = 1;
     $sql = "SELECT c.userid,
                    COALESCE(".$DB->sql_concat("u.firstname", "' '", "u.lastname").", c.authorname) AS xname,
@@ -77,7 +60,7 @@ if ($gentime == false || ($gentime !== true and $gentime + WEEKSECS < time())) {
          LEFT JOIN {user} u ON (c.userid = u.id)
           GROUP BY userid, xname, xemail";
 
-    $rs = $DB->get_recordset_sql($sql, array('%.x'));
+    $rs = $DB->get_recordset_sql($sql);
     foreach ($rs as $record) {
         $dev = new stdClass();
         $fullname = s(trim($record->xname));
@@ -93,7 +76,20 @@ if ($gentime == false || ($gentime !== true and $gentime + WEEKSECS < time())) {
     }
     $rs->close();
     $cache->set('devs', $devs);
-    $cache->set('devsmaxcommits', $max);
-    $cache->set('devsgentime', time()); //set proper gen time.
+    $cache->set('maxcommits', $max);
 }
+
+shuffle($devs);
+echo $output->box_start(array('devscloud'));
+foreach ($devs as $dev) {
+    if ($dev->commits <= 1 or $max == 0) {
+        $rel = 0;
+    } else {
+        $rel = round(log($dev->commits) / log($max) * 100);
+    }
+    $rel = 3 * max($rel, 25);
+    echo html_writer::tag('span', ' '.$dev->name.' ', array('style' => sprintf('font-size:%d%%', $rel)));
+}
+echo $output->box_end();
+
 echo $output->footer();
