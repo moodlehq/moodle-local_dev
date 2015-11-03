@@ -46,3 +46,6 @@ $string['gitcommitsby'] = 'Git commits in Moodle {$a->version} by {$a->author}';
 $string['gitmerges'] = 'Git merges';
 $string['gitmergesby'] = 'Git merges in Moodle {$a->version} by {$a->author}';
 $string['pluginname'] = 'Developer credits';
+$string['statsdevs'] = '{$a} developers';
+$string['statscommits'] = '{$a} commits';
+$string['statscountries'] = '{$a} countries';

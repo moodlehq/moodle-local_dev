@@ -3,21 +3,9 @@
     padding: 1em;
 }
 
-.path-local-dev .box.versionselector {
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 1em;
-}
-
 .path-local-dev .box.versionselector label {
     margin-left: 1ex;
     margin-right: 1ex;
-}
-
-.path-local-dev .initialbar,
-.path-local-dev .paging {
-    text-align: center;
 }
 
 .path-local-dev .paging {
@@ -65,4 +53,24 @@
     margin-left: auto;
     margin-right: auto;
     background-color: white;
+}
+
+#page-dev-contributions .versionselector {
+    margin: 2em 0 1em;
+}
+
+#page-dev-contributions .versionselector label {
+    display: inline-block;
+    margin-left: 0;
+}
+
+#page-dev-contributions .stats > div {
+    display: inline-block;
+    margin-right: 1em;
+}
+
+#page-dev-contributions .stats > div span {
+    color: #f98012;
+    font-weight: 300;
+    font-size: 20px;
 }
