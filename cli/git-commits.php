@@ -93,6 +93,9 @@ foreach ($repo->getBranches() as $gitbranch) {
 
 }
 
+// Invalidate the cache used to display the devs names tag-cloud.
+cache::make('local_dev', 'gitcommits')->purge();
+
 fputs(STDOUT, date('Y-m-d H:i', time()));
 fputs(STDOUT, " GIT-COMMITS JOB DONE\n");
 exit(0);

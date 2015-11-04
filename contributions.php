@@ -105,9 +105,8 @@ if (!$validversion) {
 $select = new single_select(new local_dev_url('/local/dev/contributions.php'), 'version', $options, $version);
 $select->set_label(get_string('contributionsversionselect', 'local_dev'));
 
-echo $output->box($output->render($select), array('generalbox versionselector'));
-
 if (!$validversion) {
+    echo $output->box($output->render($select), array('generalbox versionselector'));
     echo $output->footer();
     die();
 }
@@ -129,6 +128,24 @@ $sqlwhere  = "(" . implode(" OR ", $sqlwheremetrics) . ")";
 $sqlwhere .= " AND version = :version";
 $sqlparams = array('version' => $version);
 $table->set_sql($sqlfields, $sqlfrom, $sqlwhere, $sqlparams);
+
+$countsql = "SELECT COUNT(*) FROM {dev_activity} WHERE $sqlwhere";
+$table->set_count_sql($countsql, $sqlparams);
+
+$statsql = "SELECT COUNT(*) AS devs, COUNT(DISTINCT r.realusercountry) AS countries, SUM(r.gitcommits) AS commits
+              FROM (SELECT $sqlfields
+                      FROM $sqlfrom
+                     WHERE $sqlwhere) r";
+
+$stats = $DB->get_record_sql($statsql, $sqlparams);
+
+echo $output->container_start('stats');
+echo $output->container(get_string('statsdevs', 'local_dev', html_writer::span($stats->devs)), 'devs');
+echo $output->container(get_string('statscountries', 'local_dev', html_writer::span($stats->countries)), 'countries');
+echo $output->container(get_string('statscommits', 'local_dev', html_writer::span($stats->commits)), 'commits');
+echo $output->container_end();
+
+echo $output->box($output->render($select), array('generalbox versionselector'));
 
 $columns = array();
 $headers = array();

@@ -1,14 +1,12 @@
 .path-local-dev .devscloud {
-    border: 1px solid #efefef;
     background-color: white;
-    padding: 1em;
+    margin-top: 3em;
+    text-align: justify;
+    line-height: 25px;
 }
 
-.path-local-dev .box.versionselector {
-    width: 60%;
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
+.path-local-dev .devscloud > span {
+    vertical-align: middle;
 }
 
 .path-local-dev .box.versionselector label {
@@ -16,9 +14,8 @@
     margin-right: 1ex;
 }
 
-.path-local-dev .initialbar,
 .path-local-dev .paging {
-    text-align: center;
+    margin: 1em auto;
 }
 
 .path-local-dev .initialbar a,
@@ -51,7 +48,6 @@
 }
 
 .path-local-dev pre.gitcommit {
-    width: 80%;
     margin: 0.2em auto;
     background-color: white;
     border: 1px solid #efefef;
@@ -60,8 +56,27 @@
 }
 
 .path-local-dev .generalbox {
-    width: 80%;
     margin-left: auto;
     margin-right: auto;
     background-color: white;
+}
+
+#page-dev-contributions .versionselector {
+    margin: 2em 0 1em;
+}
+
+#page-dev-contributions .versionselector label {
+    display: inline-block;
+    margin-left: 0;
+}
+
+#page-dev-contributions .stats > div {
+    display: inline-block;
+    margin-right: 1em;
+}
+
+#page-dev-contributions .stats > div span {
+    color: #f98012;
+    font-weight: 300;
+    font-size: 20px;
 }

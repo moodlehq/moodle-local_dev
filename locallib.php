@@ -524,5 +524,8 @@ class dev_git_aliases_manager {
                                         AND a.email = {dev_git_commits}.authoremail)";
             $DB->execute($sql);
         }
+
+        // Invalidate the cache used to display the devs names tag-cloud.
+        cache::make('local_dev', 'gitcommits')->purge();
     }
 }
