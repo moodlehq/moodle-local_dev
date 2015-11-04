@@ -129,9 +129,6 @@ $sqlwhere .= " AND version = :version";
 $sqlparams = array('version' => $version);
 $table->set_sql($sqlfields, $sqlfrom, $sqlwhere, $sqlparams);
 
-$countsql = "SELECT COUNT(*) FROM {dev_activity} WHERE $sqlwhere";
-$table->set_count_sql($countsql, $sqlparams);
-
 $statsql = "SELECT COUNT(*) AS devs, COUNT(DISTINCT r.realusercountry) AS countries, SUM(r.gitcommits) AS commits
               FROM (SELECT $sqlfields
                       FROM $sqlfrom
