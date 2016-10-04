@@ -69,3 +69,67 @@ function local_dev_extend_navigation(global_navigation $navigation) {
         $admin->add(get_string('gitaliases', 'local_dev'), new local_dev_url('/local/dev/admin/git-aliases.php'));
     }
 }
+
+/**
+ * Adds information about contributions into the user profile pages.
+ *
+ * @param \core_user\output\myprofile\tree $tree Profile tree
+ * @param stdClass $user
+ * @param bool $iscurrentuser
+ * @param stdClass $course
+ *
+ * @return bool
+ */
+function local_dev_myprofile_navigation(\core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
+    global $DB, $OUTPUT;
+
+    $params = ['userid' => $user->id];
+
+    $sql = "SELECT da.userid, da.gitcommits, da.gitmerges, MIN(dgc.authordate) AS firstcommit, MAX(dgc.authordate) AS lastcommit
+              FROM {dev_activity} da
+              JOIN {dev_git_commits} dgc ON da.userid = dgc.userid
+             WHERE da.version = 'x.x.x' AND da.userid = :userid";
+
+    $data = $DB->get_record_sql($sql, ['userid' => $user->id]);
+
+    if (empty($data->userid)) {
+        return;
+    }
+
+    $category = new core_user\output\myprofile\category('moodlecore',
+        get_string('myprofilecattitle', 'local_dev'), 'contact');
+    $tree->add_category($category);
+
+    if ($data->gitcommits) {
+        $url = new local_dev_url('/local/dev/gitcommits.php', ['version' => 'x.x.x', 'userid' => $user->id, 'merges' => 0]);
+        $numberofcommits = '<span class="badge">'.$data->gitcommits.'</span>';
+        $link = html_writer::link($url, get_string('gitcommits', 'local_dev'));
+        $tree->add_node(new core_user\output\myprofile\node('moodlecore', 'gitcommits', $link.' '.$numberofcommits));
+    }
+
+    if ($data->gitmerges) {
+        $url = new local_dev_url('/local/dev/gitcommits.php', ['version' => 'x.x.x', 'userid' => $user->id, 'merges' => 1]);
+        $numberofcommits = '<span class="badge">'.$data->gitmerges.'</span>';
+        $link = html_writer::link($url, get_string('gitmerges', 'local_dev'));
+        $tree->add_node(new core_user\output\myprofile\node('moodlecore', 'gitmerges', $link.' '.$numberofcommits));
+    }
+
+    if (($data->gitcommits + $data->gitmerges > 1) and $data->firstcommit) {
+        $date = userdate($data->firstcommit, '', core_date::get_user_timezone());
+        $date .= ' <small>('.format_time(time() - $data->firstcommit).')</small>';
+        $tree->add_node(new core_user\output\myprofile\node('moodlecore', 'firstcommit',
+            get_string('myprofilefirstcommit', 'local_dev'), null, null, $date));
+    }
+
+    if ($data->lastcommit) {
+        $date = userdate($data->lastcommit, '', core_date::get_user_timezone());
+        $date .= ' <small>('.format_time(time() - $data->lastcommit).')</small>';
+        $tree->add_node(new core_user\output\myprofile\node('moodlecore', 'lastcommit',
+            get_string('myprofilelastcommit', 'local_dev'), null, null, $date));
+    }
+
+    $creditslink = (new local_dev_url('/local/dev/'))->out();
+    $node = new core_user\output\myprofile\node('moodlecore', 'creditslink', get_string('pluginname', 'local_dev'),
+        null, $creditslink, null, null, 'viewmore');
+    $tree->add_node($node);
+}
