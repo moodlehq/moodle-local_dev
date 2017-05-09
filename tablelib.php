@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -44,7 +43,7 @@ class dev_activity_table_sql extends table_sql {
         static $counter = 0;
 
         if (is_null($data->realuserid)) {
-            $src = $OUTPUT->pix_url('u/f2');
+            $src = $OUTPUT->image_url('u/f2');
             $attributes = array('src' => $src, 'class' => 'userpicture unknownuserpic x'.$counter++, 'width' => 25, 'height' => 25);
             return html_writer::empty_tag('img', $attributes);;
 
