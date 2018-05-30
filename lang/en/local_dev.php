@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -50,6 +49,34 @@ $string['myprofilecattitle'] = 'Moodle core contributions';
 $string['myprofilefirstcommit'] = 'First commit';
 $string['myprofilelastcommit'] = 'Last commit';
 $string['pluginname'] = 'Developer credits';
+$string['privacy:metadata:db:devactivity'] = 'Contains the aggregated activity records';
+$string['privacy:metadata:db:devactivity:gitcommits'] = 'Number of Git commits';
+$string['privacy:metadata:db:devactivity:gitmerges'] = 'Number of Git merges';
+$string['privacy:metadata:db:devactivity:useremail'] = 'User email';
+$string['privacy:metadata:db:devactivity:userfirstname'] = 'User first name';
+$string['privacy:metadata:db:devactivity:userlastname'] = 'User last name';
+$string['privacy:metadata:db:devactivity:version'] = 'Moodle version this activity should be considered as a part of';
+$string['privacy:metadata:db:devgitcommits'] = 'Stores the Git commit records';
+$string['privacy:metadata:db:devgitcommits:authordate'] = 'The timestamp of the commit authorship';
+$string['privacy:metadata:db:devgitcommits:authoremail'] = 'The commit author\'s email as recorded in the commit object';
+$string['privacy:metadata:db:devgitcommits:authorname'] = 'The commit\'s author name as recorded in the commit';
+$string['privacy:metadata:db:devgitcommits:commithash'] = 'SHA hash of the commit object';
+$string['privacy:metadata:db:devgitcommits:issue'] = 'The tracker issue key this commit is associated with';
+$string['privacy:metadata:db:devgitcommits:merge'] = 'Is the commit a merge commit or not';
+$string['privacy:metadata:db:devgitcommits:repository'] = 'The name of the repository this commit comes from';
+$string['privacy:metadata:db:devgitcommits:subject'] = 'The commit message subject';
+$string['privacy:metadata:db:devgitcommits:tag'] = 'The most recent git tag containing this commit';
+$string['privacy:metadata:db:devgituseraliases'] = 'Lists all aliases the given user uses in Git repositories';
+$string['privacy:metadata:db:devgituseraliases:email'] = 'The email used by the given developer';
+$string['privacy:metadata:db:devgituseraliases:fullname'] = 'The name used by the given developer';
+$string['privacy:metadata:db:devtrackeractivities'] = 'The activity stream items from the Moodle tracker';
+$string['privacy:metadata:db:devtrackeractivities:category'] = 'The category of the activity, if reported by the stream';
+$string['privacy:metadata:db:devtrackeractivities:link'] = 'The URL to the activity';
+$string['privacy:metadata:db:devtrackeractivities:timecreated'] = 'When did the activity happened';
+$string['privacy:metadata:db:devtrackeractivities:title'] = 'The activity title';
+$string['privacy:metadata:db:devtrackeractivities:userfullname'] = 'Full name as read from the tracker';
+$string['privacy:metadata:db:devtrackeractivities:userlink'] = 'The URL to see the user\'s profile';
+$string['privacy:metadata:db:devtrackeractivities:uuid'] = 'The ID of the activity author from the user table, if known';
 $string['statsdevs'] = '{$a} developers';
 $string['statscommits'] = '{$a} commits';
 $string['statscountries'] = '{$a} countries';
