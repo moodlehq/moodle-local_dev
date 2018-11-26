@@ -25,8 +25,7 @@
 
 define('CLI_SCRIPT', true);
 
-require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
-require_once($CFG->dirroot.'/local/dev/lib/php-git-repo/lib/PHPGit/Repository.php');
+require('../../../config.php');
 require_once($CFG->libdir.'/clilib.php');
 
 list($options, $unrecognized) = cli_get_params(array(
@@ -50,147 +49,8 @@ fputs(STDOUT, "*****************************************\n");
 fputs(STDOUT, date('Y-m-d H:i', time()));
 fputs(STDOUT, " GIT-COMMITS JOB STARTED\n");
 
-$repo = new PHPGit_Repository($CFG->dataroot.'/local_dev/repos/moodle.git');
-
-$config = get_config('local_dev');
-
-if ($options['reset-startpoints'] or empty($config->gitstartpoints)) {
-    set_config('gitstartpoints', json_encode(array()), 'local_dev');
-    $config = get_config('local_dev');
-}
-
-$repo->git('remote update');
-
-$gitbranches = array();
-$recentstable = 0;
-foreach ($repo->getBranches() as $gitbranch) {
-    if ($gitbranch === 'master') {
-        $gitbranches[] = $gitbranch;
-        continue;
-    }
-    if (preg_match('~^MOODLE_([0-9]+)_STABLE$~', $gitbranch, $matches)) {
-        $gitbranches[] = $gitbranch;
-        if ($matches[1] > $recentstable) {
-            $recentstable = $matches[1];
-        }
-        continue;
-    }
-}
-
-if ($recentstable < 22) {
-    throw new coding_exception('Something is wrong with the tracked repository, MOODLE_22_STABLE branch not found');
-}
-
-foreach ($repo->getBranches() as $gitbranch) {
-    if ($gitbranch === 'master') {
-        $branch = sprintf('MOODLE_%d_STABLE', $recentstable + 1);
-    } else {
-        $branch = $gitbranch;
-    }
-
-    dev_git_record_commits($repo, $gitbranch, $branch, 'no-merges', $options['show-progress']);
-    dev_git_record_commits($repo, $gitbranch, $branch, 'merges', $options['show-progress']);
-
-}
-
-// Invalidate the cache used to display the devs names tag-cloud.
-cache::make('local_dev', 'gitcommits')->purge();
+\local_dev\task\util::git_commits($options);
 
 fputs(STDOUT, date('Y-m-d H:i', time()));
 fputs(STDOUT, " GIT-COMMITS JOB DONE\n");
 exit(0);
-
-
-/**
- * Registers the commit info for all new commits on the given branch
- *
- * @param PHPGit_Repository $repo repository to parse
- * @param string $gitbranch the real name of the branch to analyze (eg 'master')
- * @param string $branch the future name of the same branch (eg 'MOODLE_28_STABLE')
- * @param string $mergemode either 'merges' or 'no-merges'
- * @param bool $showprogress
- * @internal
- */
-function dev_git_record_commits(PHPGit_Repository $repo, $gitbranch, $branch, $mergemode, $showprogress=false) {
-    global $DB;
-
-    $startpoints = get_config('local_dev', 'gitstartpoints');
-    if ($startpoints === false) {
-        set_config('gitstartpoints', json_encode(array()), 'local_dev');
-        $startpoints = get_config('local_dev', 'gitstartpoints');
-    }
-    $startpoints = json_decode($startpoints, true);
-
-    $reponame = basename($repo->getDir());
-    $exclude = empty($startpoints[$branch][$mergemode]) ? '' : $startpoints[$branch][$mergemode];
-
-    if ($mergemode === 'merges') {
-        fputs(STDOUT, "Searching merges on {$gitbranch} ({$branch})" . ($exclude ? " from {$exclude}" : "") . PHP_EOL);
-        $mergeflag = 1;
-    } else if ($mergemode === 'no-merges') {
-        fputs(STDOUT, "Searching non-merges on {$gitbranch} ({$branch})" . ($exclude ? " from {$exclude}" : "") . PHP_EOL);
-        $mergeflag = 0;
-    }
-
-    $exclude = empty($exclude) ? '' : '^'.$exclude;
-
-    $commits = explode(PHP_EOL, $repo->git("rev-list --reverse --{$mergemode} --format='tformat:COMMIT:%H TIMESTAMP:%at AUTHORNAME:%an AUTHOREMAIL:%ae SUBJECT:%s' {$gitbranch} {$exclude}"));
-
-    $total = floor(count($commits) / 2);
-    $counter = 0;
-
-    if ($showprogress and $total == 0) {
-        fputs(STDOUT, 'no commits found');
-    }
-
-    foreach ($commits as $commit) {
-        $pattern = '/^COMMIT:([0-9a-f]{40}) TIMESTAMP:([0-9]+) AUTHORNAME:(.+) AUTHOREMAIL:(.+) SUBJECT:(.*)$/';
-        if (!preg_match($pattern, $commit, $matches)) {
-            continue;
-        }
-
-        $record = new stdClass();
-        $record->repository     = $reponame;
-        $record->commithash     = $matches[1];
-        $record->authordate     = $matches[2];
-        $record->authorname     = $matches[3];
-        $record->authoremail    = $matches[4];
-        $record->subject        = $matches[5];
-        $record->merge          = $mergeflag;
-
-        $record = @fix_utf8($record);
-
-        // register the commit info record if it does not exist yet
-        $existing = $DB->get_record('dev_git_commits', array('repository' => $reponame, 'commithash' => $record->commithash), 'id', IGNORE_MISSING);
-
-        if ($existing === false) {
-            $commitid = $DB->insert_record('dev_git_commits', $record, true, true);
-        } else {
-            $commitid = $existing->id;
-        }
-
-        // register the branch containing the current commit
-        if (! $DB->record_exists('dev_git_commit_branches', array('branch' => $branch, 'commitid' => $commitid))) {
-            $branchinfo = new stdClass();
-            $branchinfo->commitid = $commitid;
-            $branchinfo->branch = $branch;
-            $DB->insert_record('dev_git_commit_branches', $branchinfo, false, true);
-        }
-
-        if ($showprogress) {
-            fputs(STDOUT, ++$counter.'/'.$total."\r");
-        }
-
-        $startpoints[$branch][$mergemode] = $record->commithash;
-
-        if ($counter % 1000 == 0) {
-            set_config('gitstartpoints', json_encode($startpoints), 'local_dev');
-        }
-    }
-
-    set_config('gitstartpoints', json_encode($startpoints), 'local_dev');
-
-    if ($showprogress) {
-        fputs(STDOUT, PHP_EOL);
-    }
-}
