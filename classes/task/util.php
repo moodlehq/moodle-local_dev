@@ -196,4 +196,46 @@ class util {
             fputs(STDOUT, PHP_EOL);
         }
     }
+
+    /**
+     * Records the most recent tag containing the commit in the database
+     *
+     * This basically calls `git describe --contains` on each commit in the database
+     * and stores the result. Only the version release tags are supported (ie those
+     * starting with the "v" character followed by a digit).
+     *
+     * @param array $options
+     */
+    public static function git_tags(array $options=[]) {
+        global $CFG, $DB;
+
+        $options['show-progress'] = $options['show-progress'] ?? false;
+
+        $repo = new \PHPGit_Repository($CFG->dataroot.'/local_dev/repos/moodle.git');
+        $commits = $DB->get_fieldset_select('dev_git_commits', 'commithash', 'tag IS NULL ORDER BY authordate DESC');
+        $total = count($commits);
+        $counter = 0;
+
+        foreach ($commits as $commit) {
+            try {
+                $tag = $repo->git("describe --exact-match --match 'v[0-9]*' --contains {$commit} 2> /dev/null");
+                if (preg_match('/^(v[0-9]+\.[0-9]+.*?)~.*$/', $tag, $matches)) {
+                    $tag = $matches[1];
+                    $DB->set_field('dev_git_commits', 'tag', $tag, array('commithash' => $commit));
+                }
+
+            } catch (\GitRuntimeException $e) {
+                // Most probably the "fatal - cannot describe" error meaning there is no tag yet describing this commit.
+                ;
+            }
+
+            if ($options['show-progress']) {
+                fputs(STDOUT, ++$counter.'/'.$total."\r");
+            }
+        }
+
+        if ($options['show-progress']) {
+            fputs(STDOUT, "\n");
+        }
+    }
 }
