@@ -80,3 +80,5 @@ $string['privacy:metadata:db:devtrackeractivities:uuid'] = 'The ID of the activi
 $string['statsdevs'] = '{$a} developers';
 $string['statscommits'] = '{$a} commits';
 $string['statscountries'] = '{$a} countries';
+$string['taskaggregate'] = 'Aggregate developer activity stats';
+$string['taskprocess'] = 'Process recent moodle.git activity';

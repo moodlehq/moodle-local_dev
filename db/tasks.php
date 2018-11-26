@@ -1,6 +1,5 @@
 <?php
-
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,17 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The plugin version information
+ * Defines the scheduled tasks and their schedule.
  *
  * @package     local_dev
- * @copyright   2012 David Mudrak <david@moodle.com>
+ * @category    task
+ * @copyright   2018 David Mudrák <david@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_dev';
-$plugin->release = '3.5.2';
-$plugin->version = 2018050702;
-$plugin->requires = 2018042500;
-$plugin->maturity = MATURITY_STABLE;
+$tasks = [
+    [
+        'classname' => 'local_dev\task\process_moodle_git',
+        'blocking' => 0,
+        'minute' => '9',
+        'hour' => '0,12',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+    [
+        'classname' => 'local_dev\task\aggregate',
+        'blocking' => 0,
+        'minute' => '39',
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+];
