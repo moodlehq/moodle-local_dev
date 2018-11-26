@@ -27,6 +27,7 @@ namespace local_dev\task;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/cohort/lib.php');
 require_once($CFG->dirroot.'/local/dev/lib/php-git-repo/lib/PHPGit/Repository.php');
 
 /**
@@ -237,5 +238,45 @@ class util {
         if ($options['show-progress']) {
             fputs(STDOUT, "\n");
         }
+    }
+
+    /**
+     * Update the "Developers" cohort members with Moodle core contributors.
+     */
+    public static function sync_cohort() {
+        global $DB;
+
+        $cohort = (object)[
+            'idnumber' => 'local_dev:Developers',
+            'component' => 'local_dev',
+        ];
+
+        if ($existingcohort = $DB->get_record('cohort', (array)$cohort)) {
+            $cohort = $existingcohort;
+            // Populate cohort members array based on existing members.
+            $members = $DB->get_records('cohort_members', ['cohortid' => $cohort->id], 'userid', 'userid');
+
+        } else {
+            $cohort->contextid = context_system::instance()->id;
+            $cohort->name = 'Developers';
+            $cohort->description = 'Automatically generated cohort from developer plugin for [Developers]';
+            $cohort->id = cohort_add_cohort($cohort);
+            $members = [];
+        }
+
+        $sql = "SELECT DISTINCT userid
+                  FROM {dev_git_commits}
+                 WHERE userid IS NOT NULL
+              ORDER BY userid";
+        $rs = $DB->get_recordset_sql($sql);
+
+        foreach ($rs as $record) {
+            if (!isset($members[$record->userid])) {
+                cohort_add_member($cohort->id, $record->userid);
+                $members[$record->userid] = $record->userid;
+            }
+        }
+
+        $rs->close();
     }
 }
