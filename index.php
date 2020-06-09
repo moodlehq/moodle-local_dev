@@ -39,7 +39,7 @@ $output = $PAGE->get_renderer('local_dev');
 
 echo $output->header();
 echo $output->heading(get_string('developers', 'local_dev'));
-echo $output->box(get_string('developersinfo', 'local_dev', 'contributions.php'));
+echo $output->box(get_string('developersinfo', 'local_dev', (new local_dev_url('/local/dev/contributions.php'))->out()));
 
 $devs = array();
 $cache = cache::make('local_dev', 'gitcommits');
