@@ -116,9 +116,9 @@ $table = new dev_activity_table_sql('dev-activity-table');
 $sqlfields = "a.id, a.version,
     COALESCE(u.firstname, a.userfirstname) AS firstname,
     COALESCE(u.lastname, a.userlastname) AS lastname,
-    COALESCE(u.email, a.useremail) AS email,".
-    user_picture::fields("u", array("country", "institution"), "realuserid", "realuser").",".
-    implode(",", $metrics);
+    COALESCE(u.email, a.useremail) AS email" .
+    \core_user\fields::for_userpic()->including('country', 'institution')->get_sql('u', false, 'realuser', 'realuserid')->selects .
+    ", " . implode(",", $metrics);
 $sqlfrom = "{dev_activity} a LEFT JOIN {user} u ON (a.userid = u.id)";
 $sqlwheremetrics = array();
 foreach ($metrics as $metric) {
