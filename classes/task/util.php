@@ -27,8 +27,8 @@ namespace local_dev\task;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/cohort/lib.php');
-require_once($CFG->dirroot.'/local/dev/lib/php-git-repo/lib/PHPGit/Repository.php');
+require_once($CFG->dirroot . '/local/dev/vendor/autoload.php');
+require_once($CFG->dirroot . '/cohort/lib.php');
 
 /**
  * Utility class for the plugin's scheduled tasks.
@@ -50,7 +50,8 @@ class util {
         $options['show-progress'] = $options['show-progress'] ?? false;
 
         // This is supposed to be a bare mirror clone of moodle.git.
-        $repo = new \PHPGit_Repository($CFG->dataroot.'/local_dev/repos/moodle.git');
+        $git = new \CzProject\GitPhp\Git;
+        $repo = $git->open($CFG->dataroot.'/local_dev/repos/moodle.git');
 
         $config = get_config('local_dev');
 
@@ -59,7 +60,7 @@ class util {
             $config = get_config('local_dev');
         }
 
-        $repo->git('remote update');
+        $repo->execute('remote', 'update');
 
         $gitbranches = array();
         $recentstable = 0;
@@ -99,14 +100,15 @@ class util {
     /**
      * Registers the commit info for all new commits on the given branch
      *
-     * @param PHPGit_Repository $repo repository to parse
+     * @param \CzProject\GitPhp\GitRepository $repo repository to parse
      * @param string $gitbranch the real name of the branch to analyze (eg 'master')
      * @param string $branch the future name of the same branch (eg 'MOODLE_28_STABLE')
      * @param string $mergemode either 'merges' or 'no-merges'
      * @param bool $showprogress
      * @internal
      */
-    protected static function git_commits_record(\PHPGit_Repository $repo, $gitbranch, $branch, $mergemode, $showprogress=false) {
+    protected static function git_commits_record(\CzProject\GitPhp\GitRepository $repo, $gitbranch, $branch,
+            $mergemode, $showprogress=false) {
         global $DB;
 
         $startpoints = get_config('local_dev', 'gitstartpoints');
@@ -116,31 +118,31 @@ class util {
         }
         $startpoints = json_decode($startpoints, true);
 
-        $reponame = basename($repo->getDir());
+        $reponame = basename($repo->getRepositoryPath());
         $exclude = empty($startpoints[$branch][$mergemode]) ? '' : $startpoints[$branch][$mergemode];
 
         if ($mergemode === 'merges') {
             if ($showprogress) {
-                fputs(STDOUT, "Searching merges on {$gitbranch} ({$branch})" . ($exclude ? " from {$exclude}" : "") . PHP_EOL);
+                mtrace("Searching merges on {$gitbranch} ({$branch})" . ($exclude ? " from {$exclude}" : ""));
             }
             $mergeflag = 1;
         } else if ($mergemode === 'no-merges') {
             if ($showprogress) {
-                fputs(STDOUT, "Searching non-merges on {$gitbranch} ({$branch})" . ($exclude ? " from {$exclude}" : "") . PHP_EOL);
+                mtrace("Searching non-merges on {$gitbranch} ({$branch})" . ($exclude ? " from {$exclude}" : ""));
             }
             $mergeflag = 0;
         }
 
-        $exclude = empty($exclude) ? '' : '^'.$exclude;
+        $exclude = empty($exclude) ? null : '^'.$exclude;
 
-        $commits = explode(PHP_EOL, $repo->git("rev-list --reverse --{$mergemode} --format='tformat:COMMIT:%H TIMESTAMP:%at ".
-            "AUTHORNAME:%an AUTHOREMAIL:%ae SUBJECT:%s' {$gitbranch} {$exclude}"));
+        $commits = $repo->execute('rev-list', '--reverse', '--' . $mergemode,  '--format=tformat:COMMIT:%H TIMESTAMP:%at ' .
+            'AUTHORNAME:%an AUTHOREMAIL:%ae SUBJECT:%s', $gitbranch, $exclude);
 
         $total = floor(count($commits) / 2);
         $counter = 0;
 
         if ($showprogress and $total == 0) {
-            fputs(STDOUT, 'no commits found');
+            mtrace('no commits found');
         }
 
         foreach ($commits as $commit) {
@@ -181,7 +183,7 @@ class util {
             }
 
             if ($showprogress) {
-                fputs(STDOUT, ++$counter.'/'.$total."\r");
+                mtrace(++$counter.'/'.$total, "\r");
             }
 
             $startpoints[$branch][$mergemode] = $record->commithash;
@@ -194,7 +196,7 @@ class util {
         set_config('gitstartpoints', json_encode($startpoints), 'local_dev');
 
         if ($showprogress) {
-            fputs(STDOUT, PHP_EOL);
+            mtrace('done');
         }
     }
 
@@ -212,31 +214,33 @@ class util {
 
         $options['show-progress'] = $options['show-progress'] ?? false;
 
-        $repo = new \PHPGit_Repository($CFG->dataroot.'/local_dev/repos/moodle.git');
+        $git = new \CzProject\GitPhp\Git;
+        $repo = $git->open($CFG->dataroot.'/local_dev/repos/moodle.git');
+
         $commits = $DB->get_fieldset_select('dev_git_commits', 'commithash', 'tag IS NULL ORDER BY authordate DESC');
         $total = count($commits);
         $counter = 0;
 
         foreach ($commits as $commit) {
             try {
-                $tag = $repo->git("describe --exact-match --match 'v[0-9]*' --contains {$commit} 2> /dev/null");
+                $tag = implode($repo->execute('describe', '--exact-match', '--match', 'v[0-9]*', '--contains', $commit));
                 if (preg_match('/^(v[0-9]+\.[0-9]+.*?)~.*$/', $tag, $matches)) {
                     $tag = $matches[1];
                     $DB->set_field('dev_git_commits', 'tag', $tag, array('commithash' => $commit));
                 }
 
-            } catch (\GitRuntimeException $e) {
+            } catch (\CzProject\GitPhpException $e) {
                 // Most probably the "fatal - cannot describe" error meaning there is no tag yet describing this commit.
-                ;
+                throw $e;
             }
 
             if ($options['show-progress']) {
-                fputs(STDOUT, ++$counter.'/'.$total."\r");
+                mtrace(++$counter.'/'.$total, "\r");
             }
         }
 
         if ($options['show-progress']) {
-            fputs(STDOUT, "\n");
+            mtrace('done');
         }
     }
 

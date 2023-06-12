@@ -32,7 +32,6 @@
 define('CLI_SCRIPT', 1);
 
 require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
-require_once($CFG->dirroot.'/local/dev/lib/php-git-repo/lib/PHPGit/Repository.php');
 require_once($CFG->libdir.'/clilib.php');
 
 list($options, $unrecognized) = cli_get_params(array(

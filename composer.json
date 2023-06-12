@@ -1,0 +1,15 @@
+{
+    "name": "mudrd8mz/moodle-local_dev",
+    "description": "Moodle developer credits processor used to display Moodle developer credits at moodle.org/dev/",
+    "type": "moodle-plugin",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "David Mudrák",
+            "email": "david@moodle.com"
+        }
+    ],
+    "require": {
+        "czproject/git-php": "^4.1"
+    }
+}
