@@ -229,9 +229,14 @@ class util {
                     $DB->set_field('dev_git_commits', 'tag', $tag, array('commithash' => $commit));
                 }
 
-            } catch (\CzProject\GitPhpException $e) {
-                // Most probably the "fatal - cannot describe" error meaning there is no tag yet describing this commit.
-                throw $e;
+            } catch (\CzProject\GitPhp\GitException $e) {
+                $error = implode($e->getRunnerResult()->getErrorOutput());
+
+                // The "fatal: cannot describe" error means there is no tag yet describing this commit.
+                // All others are real errors.
+                if (strpos($error, 'cannot describe') === null) {
+                    throw $e;
+                }
             }
 
             if ($options['show-progress']) {
