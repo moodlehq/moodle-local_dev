@@ -51,6 +51,7 @@ $max = $cache->get('maxcommits');
 
 
 if ($devs === false or $max === false) {
+    $devs = [];
     $max = 1;
     $sql = "SELECT c.userid,
                    COALESCE(".$DB->sql_concat("u.firstname", "' '", "u.lastname").", c.authorname) AS xname,
