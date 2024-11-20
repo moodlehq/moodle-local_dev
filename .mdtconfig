@@ -1,4 +1,4 @@
 MDTSITE=moodle.org
 MDTCOMPONENT=local_dev
 MDTRELPATH=local/dev/
-MDTEXPORT=origin/master
+MDTEXPORT=origin/main
