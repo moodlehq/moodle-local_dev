@@ -28,7 +28,7 @@ Prepare a mirror of the vanilla moodle.git repository in the server moodledata:
     # mkdir -p local_dev/repos
     # chown -R apache:apache local_dev
     # cd local_dev/repos
-    # nice git clone --mirror git://git.moodle.org/moodle.git
+    # nice git clone --mirror https://github.com/moodle/moodle.git
     # chown -R apache:apache moodle.git
 
 Run cli/git-commits.php to register commits history in the database:
